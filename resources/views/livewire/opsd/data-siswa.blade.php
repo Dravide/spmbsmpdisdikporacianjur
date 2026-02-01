@@ -68,8 +68,19 @@
                                             value="{{ $item->id }}">
                                     </td>
                                     <td>
-                                        <span class="fw-medium d-block">{{ $item->nama }}</span>
-                                        <small class="text-muted">{{ $item->peserta_didik_id }}</small>
+                                        <div class="d-flex align-items-center">
+                                            <div>
+                                                <span
+                                                    class="fw-medium d-block {{ $item->has_missing_data ? 'text-danger' : '' }}">{{ $item->nama }}</span>
+                                                <small class="text-muted">{{ $item->peserta_didik_id }}</small>
+                                            </div>
+                                            @if($item->has_missing_data)
+                                                <div class="ms-2" data-bs-toggle="tooltip" data-bs-placement="right"
+                                                    title="Data Belum Lengkap: {{ implode(', ', $item->missing_data) }}">
+                                                    <i class="fi fi-rr-exclamation text-danger fs-5"></i>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td>{{ $item->jenis_kelamin }}</td>
                                     <td>
@@ -78,12 +89,34 @@
                                     </td>
                                     <td>
                                         {{ $item->tempat_lahir }},
-                                        {{ $item->tanggal_lahir ? $item->tanggal_lahir->format('d/m/Y') : '-' }}
+                                        {{ $item->tanggal_lahir ? \Carbon\Carbon::parse($item->tanggal_lahir)->locale('id')->translatedFormat('d F Y') : '-' }}
                                     </td>
                                     <td>
                                         {{ $item->nama_ibu_kandung ?? '-' }}
                                     </td>
                                     <td class="text-end">
+                                        @php
+                                            // Check if registration exists and is verified/locked
+                                            // As per request: "Menunggu Verifikasi" (submitted) cannot edit.
+                                            // Also verified cannot edit.
+                                            // Statuses: draft, submitted, verified, rejected.
+                                            $isLocked = $item->pendaftaran && in_array($item->pendaftaran->status, ['submitted', 'verified', 'accepted']);
+                                            $statusLabel = $isLocked ? ($item->pendaftaran->status == 'submitted' ? 'Menunggu Verifikasi' : 'Sudah Diverifikasi') : '';
+                                        @endphp
+
+                                        @if($isLocked)
+                                            <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip"
+                                                title="Data dikunci: {{ $statusLabel }}">
+                                                <button class="btn btn-sm btn-outline-secondary me-1" disabled>
+                                                    <i class="fi fi-rr-lock"></i>
+                                                </button>
+                                            </span>
+                                        @else
+                                            <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-outline-warning me-1"
+                                                title="Edit Data">
+                                                <i class="fi fi-rr-edit"></i>
+                                            </button>
+                                        @endif
                                         <button wire:click="cetakKartu({{ $item->id }})" class="btn btn-sm btn-outline-primary"
                                             title="Cetak Kartu SPMB">
                                             <i class="fi fi-rr-print me-1"></i> Cetak
@@ -123,4 +156,41 @@
             @endif
         </div>
     @endif
+
+    <!-- Edit Modal (Extracted) -->
+    <livewire:opsd.edit-siswa-modal />
+
 </div>
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            initTooltips();
+
+            Livewire.on('alert', (data) => {
+                const payload = data[0];
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: payload.type,
+                        title: payload.type == 'success' ? 'Berhasil' : 'Info',
+                        text: payload.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    alert(payload.message);
+                }
+            });
+
+            Livewire.hook('morph.updated', () => {
+                initTooltips();
+            });
+        });
+
+        function initTooltips() {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        }
+    </script>
+@endpush

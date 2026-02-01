@@ -1,3 +1,10 @@
+@php
+    $currentUser = auth()->user();
+    if (!$currentUser && auth('siswa')->check()) {
+        $currentUser = auth('siswa')->user();
+    }
+@endphp
+
 <header class="app-header">
     <div class="app-header-inner">
         <button class="app-toggler" type="button" aria-label="app toggler">
@@ -43,52 +50,54 @@
                 </div>
             </div>
             <div class="vr my-3"></div>
-            <div class="dropdown text-end ms-sm-3 ms-2 ms-lg-4">
-                <a href="#" class="d-flex align-items-center py-2" data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside">
-                    <div class="text-end me-2 d-none d-lg-inline-block">
-                        <div class="fw-bold text-dark">{{ auth()->user()->name }}</div>
-                        <small class="text-body d-block lh-sm">
-                            <i class="fi fi-rr-angle-down text-3xs me-1"></i> {{ auth()->user()->role_label }}
-                        </small>
-                    </div>
-                    <div class="avatar avatar-sm rounded-circle avatar-status-success bg-primary text-white">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                    </div>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end w-225px mt-1">
-                    <li class="d-flex align-items-center p-2">
-                        <div class="avatar avatar-sm rounded-circle bg-primary text-white">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+            @if($currentUser)
+                <div class="dropdown text-end ms-sm-3 ms-2 ms-lg-4">
+                    <a href="#" class="d-flex align-items-center py-2" data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside">
+                        <div class="text-end me-2 d-none d-lg-inline-block">
+                            <div class="fw-bold text-dark">{{ $currentUser->name }}</div>
+                            <small class="text-body d-block lh-sm">
+                                <i class="fi fi-rr-angle-down text-3xs me-1"></i> {{ $currentUser->role_label }}
+                            </small>
                         </div>
-                        <div class="ms-2">
-                            <div class="fw-bold text-dark">{{ auth()->user()->name }}</div>
-                            <small class="text-body d-block lh-sm">{{ auth()->user()->username }}</small>
+                        <div class="avatar avatar-sm rounded-circle avatar-status-success bg-primary text-white">
+                            {{ strtoupper(substr($currentUser->name, 0, 1)) }}
                         </div>
-                    </li>
-                    <li>
-                        <div class="dropdown-divider my-1"></div>
-                    </li>
-                    @if(auth()->user()->isAdmin())
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('settings') }}">
-                                <i class="fi fi-rr-settings scale-1x"></i> Pengaturan
-                            </a>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end w-225px mt-1">
+                        <li class="d-flex align-items-center p-2">
+                            <div class="avatar avatar-sm rounded-circle bg-primary text-white">
+                                {{ strtoupper(substr($currentUser->name, 0, 1)) }}
+                            </div>
+                            <div class="ms-2">
+                                <div class="fw-bold text-dark">{{ $currentUser->name }}</div>
+                                <small class="text-body d-block lh-sm">{{ $currentUser->username }}</small>
+                            </div>
                         </li>
                         <li>
                             <div class="dropdown-divider my-1"></div>
                         </li>
-                    @endif
-                    <li>
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger">
-                                <i class="fi fi-sr-exit scale-1x"></i> Logout
-                            </button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
+                        @if(method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin())
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('settings') }}">
+                                    <i class="fi fi-rr-settings scale-1x"></i> Pengaturan
+                                </a>
+                            </li>
+                            <li>
+                                <div class="dropdown-divider my-1"></div>
+                            </li>
+                        @endif
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger">
+                                    <i class="fi fi-sr-exit scale-1x"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            @endif
         </div>
     </div>
 </header>

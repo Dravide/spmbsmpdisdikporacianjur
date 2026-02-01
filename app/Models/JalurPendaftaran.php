@@ -30,4 +30,9 @@ class JalurPendaftaran extends Model
     {
         return $this->belongsToMany(Berkas::class, 'berkas_jalur_pendaftaran', 'jalur_pendaftaran_id', 'berkas_id');
     }
+
+    public function pendaftarans()
+    {
+        return $this->hasMany(Pendaftaran::class, 'jalur_pendaftaran_id');
+    }
 }

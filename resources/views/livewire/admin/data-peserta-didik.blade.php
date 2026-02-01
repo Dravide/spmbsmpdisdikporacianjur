@@ -26,10 +26,74 @@
                         </span>
                         <input type="text" class="form-control border-start-0"
                             placeholder="Cari Nama, NISN, atau NIK..." wire:model.live.debounce.300ms="search">
+                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas"
+                            data-bs-target="#filterOffcanvas">
+                            <i class="fi fi-rr-filter me-1"></i> Filter
+                        </button>
                     </div>
                 </div>
                 <div class="col-md-6 text-end">
                     <span class="text-muted">Total: {{ $pesertaDidikList->total() }} Siswa</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Offcanvas -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="filterOffcanvas" wire:ignore.self>
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title">Filter Lanjutan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+            </div>
+            <div class="offcanvas-body">
+                <div class="mb-3" wire:ignore>
+                    <label class="form-label">Sekolah</label>
+                    <select class="form-select" id="filter-sekolah">
+                        <option value="">Semua Sekolah</option>
+                        @foreach ($sekolahList as $id => $nama)
+                            <option value="{{ $id }}">{{ $nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-3" wire:ignore>
+                    <label class="form-label">Kecamatan</label>
+                    <select class="form-select" id="filter-kecamatan">
+                        <option value="">Semua Kecamatan</option>
+                        @foreach ($kecamatanList as $kec)
+                            <option value="{{ $kec['name'] }}">{{ $kec['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Desa/Kelurahan</label>
+                    <!-- Note: This one needs to update when kecamatan changes, so we can't fully ignore it or we need to re-init. 
+                          Strategy: Wrap in a key that updates, or use JS to update options. 
+                          Simpler for Livewire: Standard select or re-init select2 on update. 
+                          Let's try standard select for Desa first as it changes dynamically, 
+                          OR re-init select2 in hook. Given user asked for Select2, let's try to make it work. -->
+                    <div wire:key="desa-select-{{ $filterKecamatan }}">
+                        <select class="form-select" id="filter-desa" wire:model.live="filterDesa">
+                            <option value="">Semua Desa</option>
+                            @foreach ($desaList as $desa)
+                                <option value="{{ $desa['name'] }}">{{ $desa['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Jenis Kelamin</label>
+                    <select class="form-select" wire:model.live="filterJk">
+                        <option value="">Semua</option>
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                    </select>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-danger" wire:click="resetFilters">Reset Filter</button>
+                    <button class="btn btn-primary" data-bs-dismiss="offcanvas">Terapkan</button>
                 </div>
             </div>
         </div>
@@ -61,7 +125,7 @@
                                 </td>
                                 <td>
                                     {{ $item->tempat_lahir }},
-                                    {{ $item->tanggal_lahir ? $item->tanggal_lahir->format('d/m/Y') : '-' }}
+                                    {{ $item->tanggal_lahir ? $item->tanggal_lahir->locale('id')->translatedFormat('d F Y') : '-' }}
                                 </td>
                                 <td>
                                     <div x-data="{ show: false }" class="d-flex align-items-center">
@@ -224,24 +288,24 @@
                 <div class="modal-footer">
                     @if($showPreview)
                         <div class="w-100" x-data="{
-                                        progress: 0,
-                                        importing: @entangle('isImporting'),
-                                        total: @entangle('totalToImport'),
-                                        processed: @entangle('importedCount'),
-                                        async startImport() {
-                                            this.progress = 0;
-                                            await @this.call('startImport');
-                                            this.processNextBatch();
-                                        },
-                                        async processNextBatch() {
-                                            if (!this.importing) return;
-                                            let result = await @this.call('processBatch');
-                                            this.progress = result;
-                                            if (this.processed < this.total && this.importing) {
-                                                setTimeout(() => this.processNextBatch(), 50);
-                                            }
-                                        }
-                                    }">
+                                                progress: 0,
+                                                importing: @entangle('isImporting'),
+                                                total: @entangle('totalToImport'),
+                                                processed: @entangle('importedCount'),
+                                                async startImport() {
+                                                    this.progress = 0;
+                                                    await @this.call('startImport');
+                                                    this.processNextBatch();
+                                                },
+                                                async processNextBatch() {
+                                                    if (!this.importing) return;
+                                                    let result = await @this.call('processBatch');
+                                                    this.progress = result;
+                                                    if (this.processed < this.total && this.importing) {
+                                                        setTimeout(() => this.processNextBatch(), 50);
+                                                    }
+                                                }
+                                            }">
                             <div x-show="importing" class="mb-3">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span>Importing...</span>
@@ -267,7 +331,67 @@
     </div>
 </div>
 
+@push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
+@endpush
+
 @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            // Init Sekolah Select2
+            $('#filter-sekolah').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#filterOffcanvas'),
+                placeholder: 'Pilih Sekolah',
+                allowClear: true
+            }).on('change', function (e) {
+                @this.set('filterSekolah', $(this).val());
+            });
+
+            // Init Kecamatan Select2
+            $('#filter-kecamatan').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#filterOffcanvas'),
+                placeholder: 'Pilih Kecamatan',
+                allowClear: true
+            }).on('change', function (e) {
+                @this.set('filterKecamatan', $(this).val());
+            });
+
+            // Init Desa Select2
+            function initDesaSelect2() {
+                $('#filter-desa').select2({
+                    theme: 'bootstrap-5',
+                    dropdownParent: $('#filterOffcanvas'),
+                    placeholder: 'Pilih Desa/Kelurahan',
+                    allowClear: true
+                }).on('change', function (e) {
+                    @this.set('filterDesa', $(this).val());
+                });
+            }
+
+            initDesaSelect2();
+
+            // Re-init Desa when Kecamatan updates
+            Livewire.on('kecamatan-updated', () => {
+                // Wait for Livewire to finish DOM update
+                setTimeout(() => {
+                    initDesaSelect2();
+                }, 100);
+            });
+
+            // Listen for reset
+            Livewire.on('filters-reset', () => {
+                $('#filter-sekolah').val(null).trigger('change');
+                $('#filter-kecamatan').val(null).trigger('change');
+                $('#filter-desa').val(null).trigger('change');
+            });
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function confirmReset() {

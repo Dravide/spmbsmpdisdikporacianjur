@@ -23,17 +23,22 @@ class SekolahMenengahPertama extends Model
         'bentuk_pendidikan_id',
         'status_sekolah',
         'alamat_jalan',
+        'daya_tampung',
+        'jumlah_rombel',
+        'desa_kelurahan',
         'desa_kelurahan',
         'rt',
         'rw',
         'lintang',
         'bujur',
         'mode_spmb',
+        'is_locked_daya_tampung',
     ];
 
     protected $casts = [
         'lintang' => 'float',
         'bujur' => 'float',
+        'is_locked_daya_tampung' => 'boolean',
     ];
 
     /**
@@ -73,5 +78,18 @@ class SekolahMenengahPertama extends Model
     public function zonaDomisili()
     {
         return $this->hasMany(ZonaDomisili::class, 'sekolah_id', 'sekolah_id');
+    }
+
+    /**
+     * Get human readable Bentuk Pendidikan
+     */
+    public function getBentukPendidikanDisplayAttribute()
+    {
+        $val = $this->bentuk_pendidikan_id;
+        if ($val == 5)
+            return 'SWASTA';
+        if ($val == 6)
+            return 'NEGERI';
+        return $val;
     }
 }

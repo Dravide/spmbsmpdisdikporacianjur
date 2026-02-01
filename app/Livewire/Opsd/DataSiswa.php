@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Http;
 
 #[Layout('layouts.app')]
 #[Title('Data Siswa')]
@@ -14,7 +15,25 @@ class DataSiswa extends Component
 {
     use WithPagination;
 
+    // public function updated($property, $value)
+    // {
+    //     // Replaced by specific property hooks
+    // }
+
     public string $search = '';
+
+    protected $listeners = ['siswa-updated' => '$refresh'];
+
+    public function edit($id)
+    {
+        $this->dispatch('editSiswa', id: $id)->to(EditSiswaModal::class);
+    }
+
+    // Logic moved to EditSiswaModal:
+    // $isEdit, $editId, $formData, $kecamatanList, $desaList
+    // $rules, $selectedKecamatanCode, $selectedDesaCode
+    // loadKecamatan, updatedSelectedKecamatanCode, updatedSelectedDesaCode, loadDesa
+    // cancelEdit, update
 
     public function generatePassword(PesertaDidik $siswa)
     {
@@ -66,8 +85,7 @@ class DataSiswa extends Component
         if (!$user->sekolah_id)
             return PesertaDidik::where('id', 0); // No results
 
-        return PesertaDidik::query()
-            ->where('sekolah_id', $user->sekolah_id)
+        return PesertaDidik::with(['sekolah', 'pendaftaran'])->where('sekolah_id', $user->sekolah_id)
             ->when($this->search, function ($q) {
                 $q->where(function ($sub) {
                     $sub->where('nama', 'like', "%{$this->search}%")

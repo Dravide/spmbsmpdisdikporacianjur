@@ -72,17 +72,35 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <a href="{{ route('admin.berkas.fields', $item->id) }}"
-                                        class="btn btn-sm btn-outline-info me-1" title="Atur Form Input">
-                                        <i class="fi fi-rr-settings-sliders"></i>
-                                    </a>
-                                    <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-outline-primary me-1">
-                                        <i class="fi fi-rr-edit"></i>
-                                    </button>
-                                    <button wire:confirm="Yakin ingin menghapus berkas ini?"
-                                        wire:click="confirmDelete({{ $item->id }})" class="btn btn-sm btn-outline-danger">
-                                        <i class="fi fi-rr-trash"></i>
-                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light btn-icon" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fi fi-rr-menu-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                            <li>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('admin.berkas.fields', $item->id) }}">
+                                                    <i class="fi fi-rr-settings-sliders me-2"></i> Atur Form Input
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item" wire:click="edit({{ $item->id }})">
+                                                    <i class="fi fi-rr-edit me-2"></i> Edit
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger"
+                                                    wire:confirm="Yakin ingin menghapus berkas ini?"
+                                                    wire:click="confirmDelete({{ $item->id }})">
+                                                    <i class="fi fi-rr-trash me-2"></i> Hapus
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

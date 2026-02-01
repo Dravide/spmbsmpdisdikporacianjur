@@ -77,29 +77,63 @@
                                 </td>
                                 <td>{{ $sekolah->desa_kelurahan ?? '-' }}</td>
                                 <td>
-                                    @if($sekolah->hasOperator())
-                                        <span class="badge bg-success"><i class="fi fi-rr-check me-1"></i>Ada</span>
+                                    @if($sekolah->operator)
+                                        <div class="d-flex flex-column gap-1 align-items-start">
+                                            <span class="badge bg-success"><i class="fi fi-rr-check me-1"></i>Ada</span>
+                                            @if($sekolah->operator->two_factor_secret)
+                                                <span class="badge bg-info cursor-pointer" title="2FA Aktif">
+                                                    <i class="fi fi-rr-shield-check me-1"></i>2FA On
+                                                </span>
+                                            @endif
+                                        </div>
                                     @else
                                         <span class="badge bg-secondary">Belum</span>
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-info" title="Generate Akun"
-                                        wire:click="generateAccount('{{ $sekolah->sekolah_id }}')">
-                                        <i class="fi fi-rr-key"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-warning"
-                                        wire:click="edit('{{ $sekolah->sekolah_id }}')">
-                                        <i class="fi fi-rr-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                        onclick="confirmDelete('{{ $sekolah->sekolah_id }}', '{{ $sekolah->nama }}')">
-                                        <i class="fi fi-rr-trash"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        wire:click="showDetailModal('{{ $sekolah->sekolah_id }}')">
-                                        <i class="fi fi-rr-eye"></i> Detail
-                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light btn-icon" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fi fi-rr-menu-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                            <li>
+                                                <button class="dropdown-item"
+                                                    wire:click="showDetailModal('{{ $sekolah->sekolah_id }}')">
+                                                    <i class="fi fi-rr-eye me-2"></i> Detail
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item"
+                                                    wire:click="edit('{{ $sekolah->sekolah_id }}')">
+                                                    <i class="fi fi-rr-edit me-2"></i> Edit
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item"
+                                                    wire:click="generateAccount('{{ $sekolah->sekolah_id }}')">
+                                                    <i class="fi fi-rr-key me-2"></i> Generate Akun
+                                                </button>
+                                            </li>
+                                            @if($sekolah->operator && $sekolah->operator->two_factor_secret)
+                                                <li>
+                                                    <button class="dropdown-item text-warning"
+                                                        onclick="confirmReset2FA('{{ $sekolah->sekolah_id }}', '{{ $sekolah->nama }}')">
+                                                        <i class="fi fi-rr-shield-check me-2"></i> Reset 2FA
+                                                    </button>
+                                                </li>
+                                            @endif
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger"
+                                                    onclick="confirmDelete('{{ $sekolah->sekolah_id }}', '{{ $sekolah->nama }}')">
+                                                    <i class="fi fi-rr-trash me-2"></i> Hapus
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -164,7 +198,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted small">Bentuk Pendidikan</label>
-                                <p class="mb-0">{{ $selectedSekolah->bentuk_pendidikan_id ?? '-' }}</p>
+                                <p class="mb-0">{{ $selectedSekolah->bentuk_pendidikan_display ?? '-' }}</p>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted small">Mode SPMB</label>
@@ -259,30 +293,63 @@
                                 </select>
                                 @error('form.mode_spmb') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label">RT</label>
+                                <input type="text" class="form-control @error('form.rt') is-invalid @enderror"
+                                    wire:model="form.rt">
+                                @error('form.rt') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">RW</label>
+                                <input type="text" class="form-control @error('form.rw') is-invalid @enderror"
+                                    wire:model="form.rw">
+                                @error('form.rw') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Desa / Kelurahan</label>
                                 <input type="text" class="form-control @error('form.desa_kelurahan') is-invalid @enderror"
                                     wire:model="form.desa_kelurahan" placeholder="Nama Desa">
                                 @error('form.desa_kelurahan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Latitude (Lintang)</label>
+                                <input type="text" class="form-control @error('form.lintang') is-invalid @enderror"
+                                    wire:model="form.lintang" placeholder="-6.8xxxxx">
+                                @error('form.lintang') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Longitude (Bujur)</label>
+                                <input type="text" class="form-control @error('form.bujur') is-invalid @enderror"
+                                    wire:model="form.bujur" placeholder="107.1xxxxx">
+                                @error('form.bujur') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Kode Wilayah</label>
+                                <input type="text" class="form-control @error('form.kode_wilayah') is-invalid @enderror"
+                                    wire:model="form.kode_wilayah" placeholder="Kode Kemendagri">
+                                @error('form.kode_wilayah') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Bentuk Pendidikan</label>
+                                <select class="form-select @error('form.bentuk_pendidikan_id') is-invalid @enderror"
+                                    wire:model="form.bentuk_pendidikan_id">
+                                    <option value="">Pilih Bentuk Pendidikan</option>
+                                    <option value="6">NEGERI (6)</option>
+                                    <option value="5">SWASTA (5)</option>
+                                    <option value="SMP">SMP</option>
+                                    <option value="MTs">MTs</option>
+                                </select>
+                                @error('form.bentuk_pendidikan_id') <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="col-12">
                                 <label class="form-label">Alamat Jalan</label>
                                 <textarea class="form-control @error('form.alamat_jalan') is-invalid @enderror"
                                     wire:model="form.alamat_jalan" rows="2" placeholder="Alamat lengkap sekolah"></textarea>
                                 @error('form.alamat_jalan') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-check p-3 border rounded bg-light">
-                                    <input class="form-check-input" type="checkbox" wire:model="form.generate_account"
-                                        id="createGenerateAccount">
-                                    <label class="form-check-label" for="createGenerateAccount">
-                                        <strong>Generate Akun Operator (OPSMP)</strong>
-                                        <small class="text-muted d-block">
-                                            {{ $isEditMode ? 'Jika dicentang, akun akan dibuat/diupdate sesuai NPSN.' : 'Username & Password akan diset sesuai NPSN.' }}
-                                        </small>
-                                    </label>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -337,6 +404,23 @@
                 });
             }
 
+            function confirmReset2FA(id, nama) {
+                Swal.fire({
+                    title: 'Reset 2FA?',
+                    html: `Anda akan mereset autentikasi dua faktor untuk operator <strong>${nama}</strong>?<br><small class="text-muted">Operator harus melakukan setup ulang 2FA saat login berikutnya.</small>`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ffc107',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Reset!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        @this.call('resetTwoFactor', id);
+                    }
+                });
+            }
+
             document.addEventListener('livewire:initialized', () => {
                 Livewire.on('import-success', (event) => {
                     // Close modal
@@ -362,3 +446,4 @@
             });
         </script>
     @endpush
+</div>

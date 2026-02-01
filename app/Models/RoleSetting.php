@@ -12,12 +12,14 @@ class RoleSetting extends Model
         'max_login_locations',
         'session_timeout_minutes',
         'allow_multiple_sessions',
+        'two_factor_required',
     ];
 
     protected $casts = [
         'max_login_locations' => 'integer',
         'session_timeout_minutes' => 'integer',
         'allow_multiple_sessions' => 'boolean',
+        'two_factor_required' => 'boolean',
     ];
 
     /**

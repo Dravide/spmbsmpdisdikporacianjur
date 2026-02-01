@@ -255,6 +255,25 @@
 
     <!-- Wizard Content -->
     <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white p-4 d-flex justify-content-between border-bottom">
+            @if($step > 1)
+                <button type="button" class="btn btn-outline-secondary" wire:click="previousStep">
+                    <i class="fi fi-rr-angle-left me-1"></i> Sebelumnya
+                </button>
+            @else
+                <div></div> 
+            @endif
+
+            @if($step < $totalSteps)
+                <button type="button" class="btn btn-primary" onclick="confirmNext()">
+                    Selanjutnya <i class="fi fi-rr-angle-right ms-1"></i>
+                </button>
+            @else
+                <button type="button" class="btn btn-success" onclick="confirmSubmit()">
+                    <i class="fi fi-rr-paper-plane me-1"></i> Kirim
+                </button>
+            @endif
+        </div>
         <div class="card-body p-4">
             
             @if (session()->has('error'))
@@ -270,31 +289,181 @@
                 <h5 class="mb-3">Langkah 1: Konfirmasi Data Diri</h5>
                 <p class="text-muted">Sebelum melanjutkan, mohon periksa kembali data diri Anda.</p>
 
+                @error('step1')
+                    <div class="alert alert-danger d-flex align-items-center mb-4">
+                        <i class="fi fi-rr-exclamation-triangle fs-4 me-3"></i>
+                        <div>
+                            <strong>Data Belum Lengkap!</strong>
+                            <div class="small">{{ $message }}</div>
+                        </div>
+                    </div>
+                @enderror
+
                 <div class="card bg-light border-0 mb-4">
                     <div class="card-body">
-                        <div class="row g-3">
+                        <!-- Identitas -->
+                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Identitas Peserta Didik</h6>
+                        <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="small text-muted">Nama Lengkap</label>
-                                <div class="fw-bold fs-5">{{ $userData->nama ?? '-' }}</div>
+                                <label class="small text-muted d-block">Nama Lengkap</label>
+                                <span class="fw-bold fs-5 {{ isset($missingFields['nama']) ? 'text-danger' : '' }}">{{ $userData->nama ?? '-' }}
+                                    @if(isset($missingFields['nama'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">NISN</label>
+                                <span class="fw-bold {{ isset($missingFields['nisn']) ? 'text-danger' : '' }}">{{ $userData->nisn ?? '-' }}
+                                    @if(isset($missingFields['nisn'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">NIK</label>
+                                <span class="fw-bold {{ isset($missingFields['nik']) ? 'text-danger' : '' }}">{{ $userData->nik ?? '-' }}
+                                    @if(isset($missingFields['nik'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">No. Kartu Keluarga</label>
+                                <span class="fw-bold {{ isset($missingFields['no_kk']) ? 'text-danger' : '' }}">{{ $userData->no_kk ?? '-' }}
+                                    @if(isset($missingFields['no_kk'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">Jenis Kelamin</label>
+                                <span class="fw-bold {{ isset($missingFields['jenis_kelamin']) ? 'text-danger' : '' }}">
+                                    {{ $userData->jenis_kelamin == 'L' ? 'Laki-laki' : ($userData->jenis_kelamin == 'P' ? 'Perempuan' : '-') }}
+                                    @if(isset($missingFields['jenis_kelamin'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                </span>
                             </div>
                             <div class="col-md-6">
-                                <label class="small text-muted">NISN</label>
-                                <div class="fw-bold fs-5">{{ $userData->nisn ?? '-' }}</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="small text-muted">Sekolah Asal (SD)</label>
-                                <div class="fw-bold">{{ $userData->sekolah->nama ?? '-' }}</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="small text-muted">Tempat, Tanggal Lahir</label>
-                                <div class="fw-bold">
+                                <label class="small text-muted d-block">Tempat, Tanggal Lahir</label>
+                                <span class="fw-bold {{ (isset($missingFields['tempat_lahir']) || isset($missingFields['tanggal_lahir'])) ? 'text-danger' : '' }}">
                                     {{ $userData->tempat_lahir ?? '-' }}, 
-                                    {{ $userData->tanggal_lahir ? \Carbon\Carbon::parse($userData->tanggal_lahir)->format('d F Y') : '-' }}
+                                    {{ $userData->tanggal_lahir ? \Carbon\Carbon::parse($userData->tanggal_lahir)->locale('id')->translatedFormat('d F Y') : '-' }}
+                                    @if(isset($missingFields['tempat_lahir']) || isset($missingFields['tanggal_lahir'])) <small class="text-danger">(Belum Lengkap)</small> @endif
+                                </span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted d-block">Sekolah Asal</label>
+                                <span class="fw-bold">{{ $userData->sekolah->nama ?? '-' }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted d-block">Kebutuhan Khusus</label>
+                                <span class="fw-bold">{{ $userData->kebutuhan_khusus ?? '-' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Alamat -->
+                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Alamat Tempat Tinggal</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="small text-muted d-block">Alamat Jalan</label>
+                                <span class="fw-bold {{ isset($missingFields['alamat_jalan']) ? 'text-danger' : '' }}">{{ $userData->alamat_jalan ?? '-' }}
+                                    @if(isset($missingFields['alamat_jalan'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">Desa / Kelurahan</label>
+                                <span class="fw-bold">{{ $userData->desa_kelurahan ?? '-' }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">Kecamatan</label>
+                                <span class="fw-bold {{ isset($missingFields['kecamatan']) ? 'text-danger' : '' }}">{{ $userData->kecamatan ?? '-' }}
+                                    @if(isset($missingFields['kecamatan'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">Dusun</label>
+                                <span class="fw-bold">{{ $userData->nama_dusun ?? '-' }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">RT / RW</label>
+                                <span class="fw-bold">{{ $userData->rt ?? '-' }} / {{ $userData->rw ?? '-' }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small text-muted d-block">Koordinat (Awal)</label>
+                                <span class="fw-bold {{ (isset($missingFields['lintang']) || isset($missingFields['bujur'])) ? 'text-danger' : '' }}">
+                                    {{ $userData->lintang ?? '-' }}, {{ $userData->bujur ?? '-' }}
+                                    @if(isset($missingFields['lintang']) || isset($missingFields['bujur'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Data Orang Tua -->
+                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Data Orang Tua / Wali</h6>
+                        <div class="row g-4 mb-4">
+                            <!-- Ibu -->
+                            <div class="col-md-4">
+                                <div class="bg-body-secondary p-3 rounded h-100">
+                                    <strong class="d-block mb-3 text-secondary text-uppercase small ls-1">Ibu Kandung</strong>
+                                    <div class="mb-2">
+                                        <label class="small text-muted d-block">Nama</label>
+                                        <span class="fw-bold {{ isset($missingFields['nama_ibu_kandung']) ? 'text-danger' : '' }}">{{ $userData->nama_ibu_kandung ?? '-' }}
+                                            @if(isset($missingFields['nama_ibu_kandung'])) <small class="text-danger">(Belum Diisi)</small> @endif
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="small text-muted d-block">Pekerjaan</label>
+                                        <span class="fw-bold">{{ $userData->pekerjaan_ibu ?? '-' }}</span>
+                                    </div>
+                                    <div>
+                                        <label class="small text-muted d-block">Penghasilan</label>
+                                        <span class="fw-bold">{{ $userData->penghasilan_ibu ?? '-' }}</span>
+                                    </div>
                                 </div>
                             </div>
-                             <div class="col-12">
-                                <label class="small text-muted">Alamat</label>
-                                <div class="fw-bold">{{ $userData->alamat_jalan ?? '-' }}</div>
+                            <!-- Ayah -->
+                            <div class="col-md-4">
+                                <div class="bg-body-secondary p-3 rounded h-100">
+                                    <strong class="d-block mb-3 text-secondary text-uppercase small ls-1">Ayah</strong>
+                                    <div class="mb-2">
+                                        <label class="small text-muted d-block">Nama</label>
+                                        <span class="fw-bold">{{ $userData->nama_ayah ?? '-' }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="small text-muted d-block">Pekerjaan</label>
+                                        <span class="fw-bold">{{ $userData->pekerjaan_ayah ?? '-' }}</span>
+                                    </div>
+                                    <div>
+                                        <label class="small text-muted d-block">Penghasilan</label>
+                                        <span class="fw-bold">{{ $userData->penghasilan_ayah ?? '-' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Wali -->
+                            <div class="col-md-4">
+                                <div class="bg-body-secondary p-3 rounded h-100">
+                                    <strong class="d-block mb-3 text-secondary text-uppercase small ls-1">Wali</strong>
+                                    <div class="mb-2">
+                                        <label class="small text-muted d-block">Nama</label>
+                                        <span class="fw-bold">{{ $userData->nama_wali ?? '-' }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="small text-muted d-block">Pekerjaan</label>
+                                        <span class="fw-bold">{{ $userData->pekerjaan_wali ?? '-' }}</span>
+                                    </div>
+                                    <div>
+                                        <label class="small text-muted d-block">Penghasilan</label>
+                                        <span class="fw-bold">{{ $userData->penghasilan_wali ?? '-' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lainnya -->
+                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Data Lainnya</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="small text-muted d-block">No. KIP</label>
+                                <span class="fw-bold">{{ $userData->no_KIP ?? '-' }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small text-muted d-block">No. PKH</label>
+                                <span class="fw-bold">{{ $userData->no_pkh ?? '-' }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small text-muted d-block">Penerima PIP (Flag)</label>
+                                <span class="fw-bold">{{ $userData->flag_pip == 1 ? 'Ya' : 'Tidak' }}</span>
                             </div>
                         </div>
                     </div>
@@ -383,7 +552,7 @@
                     </div>
                 @endif
 
-                <div id="map" class="mt-3 rounded border" style="height: 400px;" wire:ignore></div>
+                <div id="map" class="mt-3 rounded border" style="height: 600px;" wire:ignore></div>
                 <div class="mt-2 text-end">
                     <button type="button" class="btn btn-outline-primary btn-sm" onclick="getLocation()">
                         <i class="fi fi-rr-crosshairs me-1"></i> Gunakan Lokasi Saat Ini
@@ -392,50 +561,112 @@
             @endif
 
             <!-- Step 4: Pilih Jalur -->
+            <!-- Step 4: Pilih Jalur -->
+            <!-- Step 4: Pilih Jalur -->
             @if ($step == 4)
-                <h5 class="mb-3">Langkah 4: Pilih Jalur Pendaftaran</h5>
+                <div class="text-center mb-3">
+                    <h5 class="fw-bold">Pilih Jalur Pendaftaran</h5>
+                    <p class="text-muted small">Pilih jalur pendaftaran yang sesuai dengan kriteria Anda.</p>
+                </div>
                 
-                <div class="row g-3">
+                <div class="row g-3 justify-content-center">
                     @forelse($jalurList as $jalur)
-                        <div class="col-md-6">
-                            <label class="card h-100 cursor-pointer {{ $selectedJalurId == $jalur->id ? 'border-primary bg-primary-subtle' : '' }}" style="cursor: pointer;">
-                                <div class="card-body">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="jalur" value="{{ $jalur->id }}" wire:model.live="selectedJalurId">
-                                        <label class="form-check-label fw-bold d-block text-dark">
-                                            {{ $jalur->nama }}
-                                        </label>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="card h-100 card-action action-border-primary {{ $selectedJalurId == $jalur->id ? 'action-active border-primary shadow-sm' : 'border' }} cursor-pointer position-relative transition-all" style="cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="jalur" value="{{ $jalur->id }}" wire:model.live="selectedJalurId" class="d-none">
+                                
+                                <div class="card-body p-3 text-center d-flex flex-column align-items-center">
+                                    <!-- Dynamic Icon based on Jalur Name -->
+                                    @php
+                                        $iconClass = 'fi-rr-road'; // default
+                                        $bgClass = 'bg-primary-subtle text-primary';
+                                        
+                                        $lowerName = strtolower($jalur->nama);
+                                        if (str_contains($lowerName, 'zonasi')) {
+                                            $iconClass = 'fi-rr-map-marker-home';
+                                        } elseif (str_contains($lowerName, 'prestasi')) {
+                                            $iconClass = 'fi-rr-trophy';
+                                            $bgClass = 'bg-warning-subtle text-warning';
+                                        } elseif (str_contains($lowerName, 'afirmasi')) {
+                                            $iconClass = 'fi-rr-heart';
+                                            $bgClass = 'bg-danger-subtle text-danger';
+                                        } elseif (str_contains($lowerName, 'pindah')) {
+                                            $iconClass = 'fi-rr-briefcase';
+                                            $bgClass = 'bg-info-subtle text-info';
+                                        }
+                                        
+                                        if($selectedJalurId == $jalur->id) {
+                                            $bgClass = 'bg-primary text-white';
+                                        }
+                                    @endphp
+
+                                    <div class="avatar avatar-lg rounded-circle mb-2 {{ $bgClass }} d-flex align-items-center justify-content-center transition-colors">
+                                        <i class="fi {{ $iconClass }} fs-4"></i>
                                     </div>
-                                    <p class="text-muted small ms-4 mb-2">
-                                        {{ $jalur->deskripsi }}
-                                    </p>
+
+                                    <h6 class="fw-bold mb-1">{{ $jalur->nama }}</h6>
+                                    <p class="text-muted small mb-2 flex-grow-1" style="font-size: 0.8rem;">{{ $jalur->deskripsi }}</p>
+
                                     @if($jalur->kuota)
-                                        <span class="badge bg-secondary ms-4">Kuota: {{ $jalur->kuota }}</span>
+                                        <span class="badge {{ $selectedJalurId == $jalur->id ? 'bg-primary-subtle text-primary border border-primary' : 'bg-secondary-subtle text-secondary' }} rounded-pill px-2 py-1 mt-auto" style="font-size: 0.7rem;">
+                                            <i class="fi fi-rr-users-alt me-1"></i> Kuota: {{ $jalur->kuota }}
+                                        </span>
                                     @endif
                                 </div>
+
+                                @if($selectedJalurId == $jalur->id)
+                                    <div class="position-absolute top-0 end-0 mt-2 me-2">
+                                        <div class="bg-primary text-white rounded-circle p-1 d-flex shadow-sm" style="width: 20px; height: 20px; align-items: center; justify-content: center;">
+                                            <i class="fi fi-br-check" style="font-size: 0.6rem;"></i>
+                                        </div>
+                                    </div>
+                                @endif
                             </label>
                         </div>
                     @empty
-                        <div class="col-12 text-center text-muted">Belum ada jalur pendaftaran yang dibuka.</div>
+                        <div class="col-12 text-center py-4">
+                            <div class="mb-2">
+                                <div class="avatar avatar-xl bg-secondary-subtle rounded-circle d-flex align-items-center justify-content-center mx-auto">
+                                    <i class="fi fi-rr-calendar-clock fs-2 text-muted"></i>
+                                </div>
+                            </div>
+                            <h6 class="fw-bold text-dark">Belum Ada Jalur Dibuka</h6>
+                            <p class="text-muted small">Saat ini belum ada jalur pendaftaran yang tersedia/aktif.</p>
+                        </div>
                     @endforelse
                 </div>
-                @error('selectedJalurId') <div class="text-danger mt-2">{{ $message }}</div> @enderror
+                
+                @error('selectedJalurId') 
+                    <div class="text-center mt-3">
+                        <div class="alert alert-danger d-inline-block px-3 py-1 mb-0 small">
+                             <i class="fi fi-rr-info me-1"></i> {{ $message }}
+                        </div>
+                    </div>
+                @enderror
                 
                 @if($requiredBerkas)
-                    <div class="mt-4">
-                        <h6>Berkas yang Diperlukan:</h6>
-                        <ul class="list-group">
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold mb-2 d-flex align-items-center small">
+                            <i class="fi fi-rr-document-signed me-2 text-primary"></i> 
+                            Dokumen Persyaratan:
+                        </h6>
+                        <div class="row g-2">
                             @foreach($requiredBerkas as $berkas)
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ $berkas->nama }}
-                                    @if($berkas->is_required)
-                                        <span class="badge bg-danger">Wajib</span>
-                                    @else
-                                        <span class="badge bg-secondary">Opsional</span>
-                                    @endif
-                                </li>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center bg-white border rounded p-2 h-100">
+                                        <div class="avatar avatar-xs {{ $berkas->is_required ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success' }} rounded-circle me-2 flex-shrink-0 d-flex align-items-center justify-content-center">
+                                            <i class="fi {{ $berkas->is_required ? 'fi-rr-exclamation' : 'fi-rr-check' }}" style="font-size: 0.7rem;"></i>
+                                        </div>
+                                        <div class="flex-grow-1" style="line-height: 1.2;">
+                                            <div class="fw-semibold text-dark small" style="font-size: 0.85rem;">{{ $berkas->nama }}</div>
+                                            <small class="{{ $berkas->is_required ? 'text-danger' : 'text-success' }}" style="font-size: 0.7rem;">
+                                                {{ $berkas->is_required ? 'Wajib' : 'Opsional' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
                             @endforeach
-                        </ul>
+                        </div>
                     </div>
                 @endif
             @endif
@@ -445,7 +676,7 @@
                 <h5 class="mb-3">Langkah 5: Upload Dokumen</h5>
                 <div class="alert alert-warning d-flex align-items-center">
                     <i class="fi fi-rr-info fs-5 me-2"></i>
-                    <small>Pastikan dokumen terbaca jelas. Format: PDF/JPG/PNG. Maks 2MB per file.</small>
+                    <small>Pastikan dokumen terbaca jelas. Format: PDF/JPG/PNG. Maksimal ukuran sesuai ketentuan per dokumen.</small>
                 </div>
 
                 @if(count($requiredBerkas) > 0)
@@ -504,35 +735,140 @@
 
             <!-- Step 6: Validasi -->
             @if ($step == 6)
-                <h5 class="mb-3">Langkah 6: Validasi & Kirim</h5>
+                <div class="text-center mb-4">
+                    <h5 class="fw-bold">Langkah 6: Validasi & Kirim</h5>
+                    <p class="text-muted">Mohon periksa kembali seluruh data sebelum mengirim pendaftaran.</p>
+                </div>
                 
-                <div class="card bg-light border mb-4">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <small class="text-muted d-block">Nama Peserta Didik</small>
-                                <strong>{{ $userData->nama ?? '-' }}</strong>
-                            </div>
-                            <div class="col-md-6">
-                                <small class="text-muted d-block">Sekolah Tujuan</small>
-                                <strong>{{ $selectedSekolah->nama ?? '-' }}</strong>
-                            </div>
-                            <div class="col-md-6">
-                                <small class="text-muted d-block">Jalur Pendaftaran</small>
-                                <strong>{{ $selectedJalur->nama ?? '-' }}</strong>
-                            </div>
-                            <div class="col-md-6">
-                                <small class="text-muted d-block">Jarak Tempuh</small>
-                                <strong>{{ $distance ? number_format($distance / 1000, 2) . ' KM' : '-' }}</strong>
+                <div class="accordion mb-4" id="accordionReview">
+                    
+                    <!-- 1. Pilihan Pendaftaran -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#reviewPendaftaran" aria-expanded="true">
+                                <i class="fi fi-rr-school me-2 text-primary"></i> Pilihan Pendaftaran
+                            </button>
+                        </h2>
+                        <div id="reviewPendaftaran" class="accordion-collapse collapse show" data-bs-parent="#accordionReview">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block uppercase">Sekolah Tujuan</small>
+                                        <div class="fw-bold fs-5 text-primary">{{ $selectedSekolah->nama ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block uppercase">Jalur Pendaftaran</small>
+                                        <div class="fw-bold fs-5">{{ $selectedJalur->nama ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block uppercase">Jarak Tempuh</small>
+                                        <div class="fw-bold">{{ $distance ? number_format($distance / 1000, 2) . ' KM' : '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block uppercase">Koordinat Anda</small>
+                                        <div class="fw-bold font-monospace">{{ $latitude ?? '-' }}, {{ $longitude ?? '-' }}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- 2. Data Pribadi -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#reviewPribadi">
+                                <i class="fi fi-rr-user me-2 text-primary"></i> Data Pribadi & Alamat
+                            </button>
+                        </h2>
+                        <div id="reviewPribadi" class="accordion-collapse collapse" data-bs-parent="#accordionReview">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Nama Lengkap</small>
+                                        <strong class="text-dark">{{ $userData->nama ?? '-' }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block">NISN</small>
+                                        <strong>{{ $userData->nisn ?? '-' }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block">NIK</small>
+                                        <strong>{{ $userData->nik ?? '-' }}</strong>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Tempat, Tanggal Lahir</small>
+                                        <strong>{{ $userData->tempat_lahir ?? '-' }}, {{ $userData->tanggal_lahir ? \Carbon\Carbon::parse($userData->tanggal_lahir)->translatedFormat('d F Y') : '-' }}</strong>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Jenis Kelamin</small>
+                                        <strong>{{ $userData->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}</strong>
+                                    </div>
+                                    <div class="col-12 border-top pt-2 mt-2">
+                                        <small class="text-muted d-block">Alamat Lengkap</small>
+                                        <strong>{{ $userData->alamat_jalan ?? '-' }}</strong>
+                                        <div class="text-muted small">
+                                            Desa {{ $userData->desa_kelurahan ?? '-' }}, Kec. {{ $userData->kecamatan ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Berkas Persyaratan -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#reviewBerkas">
+                                <i class="fi fi-rr-document-signed me-2 text-primary"></i> Berkas Persyaratan
+                            </button>
+                        </h2>
+                        <div id="reviewBerkas" class="accordion-collapse collapse show" data-bs-parent="#accordionReview">
+                            <div class="accordion-body p-0">
+                                @if(count($requiredBerkas) > 0)
+                                    <div class="list-group list-group-flush">
+                                        @foreach($requiredBerkas as $berkas)
+                                            @php
+                                                $uploaded = isset($existingFiles[$berkas->id]);
+                                                $file = $existingFiles[$berkas->id] ?? null;
+                                            @endphp
+                                            <div class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar avatar-sm {{ $uploaded ? 'bg-success-subtle text-success' : ($berkas->is_required ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning') }} rounded-circle me-3 flex-shrink-0 d-flex align-items-center justify-content-center">
+                                                        <i class="fi {{ $uploaded ? 'fi-rr-check' : 'fi-rr-cross' }}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-semibold {{ $uploaded ? 'text-dark' : 'text-muted' }}">{{ $berkas->nama }}</div>
+                                                        @if($uploaded)
+                                                            <small class="text-success"><i class="fi fi-rr-file-check me-1"></i>Telah diunggah</small>
+                                                        @else
+                                                            <small class="{{ $berkas->is_required ? 'text-danger' : 'text-warning' }}">
+                                                                {{ $berkas->is_required ? 'Belum diunggah (Wajib)' : 'Belum diunggah (Opsional)' }}
+                                                            </small>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                @if($uploaded)
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                        onclick="openPdfPreview('{{ asset('storage/' . $file->file_path) }}', '{{ $berkas->nama }}')">
+                                                        <i class="fi fi-rr-eye"></i> Lihat
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="p-4 text-center text-muted">Tidak ada berkas yang diperlukan.</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="form-check mb-4">
-                    <input class="form-check-input" type="checkbox" id="confirmData">
-                    <label class="form-check-label" for="confirmData">
-                        Saya menyatakan bahwa data yang saya isi adalah benar dan dapat dipertanggungjawabkan.
+                <div class="form-check mb-4 bg-primary-subtle p-3 rounded border border-primary">
+                    <input class="form-check-input ms-1 mt-1" type="checkbox" id="confirmData" style="transform: scale(1.2);">
+                    <label class="form-check-label ms-2 fw-semibold text-primary-emphasis" for="confirmData">
+                        Saya menyatakan bahwa seluruh data dan berkas yang saya lampirkan adalah benar dan saya bertanggung jawab penuh atas keasliannya.
                     </label>
                 </div>
             @endif
@@ -645,8 +981,16 @@
     }
 
     Livewire.hook('morph.updated', ({ component, el }) => {
-        if (component.snapshot.data.step === 3 && !map && document.getElementById('map')) {
-            initMap();
+        if (component.snapshot.data.step === 3) {
+            const mapEl = document.getElementById('map');
+            if (mapEl && !mapEl.classList.contains('leaflet-container')) {
+                if (map) {
+                    map.off();
+                    map.remove();
+                    map = null;
+                }
+                initMap();
+            }
         }
     });
 

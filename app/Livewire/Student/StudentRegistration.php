@@ -35,10 +35,11 @@ class StudentRegistration extends Component
         if ($this->step == 5) {
             foreach ($this->requiredBerkas as $berkas) {
                 // Skip file validation if file already exists in database
+                $maxSize = $berkas->max_size_kb ?? 2048;
                 if (!isset($this->existingBerkas[$berkas->id])) {
-                    $rules["berkasFiles.{$berkas->id}"] = $berkas->is_required ? 'required|file|max:2048' : 'nullable|file|max:2048';
+                    $rules["berkasFiles.{$berkas->id}"] = $berkas->is_required ? "required|file|max:{$maxSize}" : "nullable|file|max:{$maxSize}";
                 } else {
-                    $rules["berkasFiles.{$berkas->id}"] = 'nullable|file|max:2048';
+                    $rules["berkasFiles.{$berkas->id}"] = "nullable|file|max:{$maxSize}";
                 }
 
                 // Dynamic Form Fields Rules
@@ -70,6 +71,7 @@ class StudentRegistration extends Component
     // Step 1: Konfirmasi Data Diri
     public $userData;
     public $dataConfirmed = false;
+    public $missingFields = [];
 
     // Step 2: Pilih Sekolah
     public $searchSekolah = '';
@@ -185,7 +187,13 @@ class StudentRegistration extends Component
 
     public function nextStep()
     {
+        $this->resetErrorBag();
         $this->validateStep($this->step);
+
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
         $this->saveCurrentStep();
 
         if ($this->step < $this->totalSteps) {
@@ -281,6 +289,26 @@ class StudentRegistration extends Component
         }
     }
 
+    public function updatedLatitude()
+    {
+        $this->recalculateDistance();
+    }
+
+    public function updatedLongitude()
+    {
+        $this->recalculateDistance();
+    }
+
+    protected function recalculateDistance()
+    {
+        if ($this->selectedSekolahId && $this->latitude && $this->longitude) {
+            $sekolah = SekolahMenengahPertama::find($this->selectedSekolahId);
+            if ($sekolah && $sekolah->lintang && $sekolah->bujur) {
+                $this->distance = $this->calculateDistance($this->latitude, $this->longitude, $sekolah->lintang, $sekolah->bujur);
+            }
+        }
+    }
+
     // --- Steps Logic ---
 
     public function selectSekolah($id, $name, $lat, $lon)
@@ -314,7 +342,21 @@ class StudentRegistration extends Component
     public function validateStep($step)
     {
         if ($step == 1) {
-            // No validation needed for Step 1 anymore, validation is implicitly done by confirming "Next"
+            $requiredFields = [
+                'kecamatan' => 'Kecamatan',
+            ];
+
+            $this->missingFields = [];
+            foreach ($requiredFields as $field => $label) {
+                if (empty($this->userData->$field)) {
+                    $this->missingFields[$field] = $label;
+                }
+            }
+
+            if (!empty($this->missingFields)) {
+                $this->addError('step1', 'Data diri belum lengkap. Silakan lengkapi data yang ditandai merah melalui Operator Sekolah Asal.');
+                return;
+            }
         } elseif ($step == 2) {
             $this->validate([
                 'selectedSekolahId' => 'required',
@@ -337,12 +379,13 @@ class StudentRegistration extends Component
 
             foreach ($this->requiredBerkas as $berkas) {
                 // Skip file validation if file already exists in database
+                $maxSize = $berkas->max_size_kb ?? 2048;
                 if (!isset($this->existingBerkas[$berkas->id])) {
                     if ($berkas->is_required) {
-                        $rules["berkasFiles.{$berkas->id}"] = 'required|file|max:2048'; // Max 2MB
+                        $rules["berkasFiles.{$berkas->id}"] = "required|file|max:{$maxSize}";
                         $messages["berkasFiles.{$berkas->id}.required"] = "Berkas {$berkas->nama} wajib diunggah.";
                     } else {
-                        $rules["berkasFiles.{$berkas->id}"] = 'nullable|file|max:2048';
+                        $rules["berkasFiles.{$berkas->id}"] = "nullable|file|max:{$maxSize}";
                     }
                 }
 
@@ -441,11 +484,13 @@ class StudentRegistration extends Component
         try {
             // Generate Registration Number if not exists
             if (!$pendaftaran->nomor_pendaftaran) {
-                $regNumber = 'REG-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+                // Format: SPMB-XXXXXX-YY (e.g., SPMB-A1B2C3-26)
+                $regNumber = 'SPMB-' . strtoupper(\Illuminate\Support\Str::random(6)) . '-' . date('y');
                 $pendaftaran->nomor_pendaftaran = $regNumber;
             }
 
             $pendaftaran->status = 'submitted';
+            $pendaftaran->submitted_at = now(); // Set timestamp submission
             $pendaftaran->save();
 
             DB::commit();

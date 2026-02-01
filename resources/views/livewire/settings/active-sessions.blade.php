@@ -56,8 +56,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span
-                                        class="badge bg-{{ $session->user->role === 'admin' ? 'danger' : ($session->user->role === 'cmb' ? 'info' : 'primary') }}">
+                                    <span class="badge bg-{{ $session->user->role === 'admin' ? 'danger' : 'primary' }}">
                                         {{ $session->user->role_label }}
                                     </span>
                                 </td>

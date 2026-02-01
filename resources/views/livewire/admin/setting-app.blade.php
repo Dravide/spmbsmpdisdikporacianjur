@@ -57,6 +57,36 @@
                                 <div class="form-text text-muted">Teks alternatif jika gambar tidak ada.</div>
                             </div>
                         </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Mode Situs</label>
+                            <div class="d-flex gap-4 p-3 border rounded bg-light">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" wire:model="site_mode" id="modeNormal"
+                                        value="normal">
+                                    <label class="form-check-label" for="modeNormal">
+                                        <i class="fi fi-rr-check-circle text-success me-1"></i> Normal
+                                        <small class="d-block text-muted">Web dapat diakses publik.</small>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" wire:model="site_mode"
+                                        id="modeMaintenance" value="maintenance">
+                                    <label class="form-check-label" for="modeMaintenance">
+                                        <i class="fi fi-rr-tools text-warning me-1"></i> Maintenance
+                                        <small class="d-block text-muted">Menampilkan halaman perbaikan.</small>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" wire:model="site_mode"
+                                        id="modeComingSoon" value="coming_soon">
+                                    <label class="form-check-label" for="modeComingSoon">
+                                        <i class="fi fi-rr-rocket-lunch text-info me-1"></i> Coming Soon
+                                        <small class="d-block text-muted">Menampilkan halaman segera hadir.</small>
+                                    </label>
+                                </div>
+                            </div>
+                            @error('site_mode') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+                        </div>
 
                         <div class="mb-4">
                             <label class="form-label fw-bold">Logo Gambar</label>

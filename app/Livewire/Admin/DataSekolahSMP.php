@@ -28,7 +28,12 @@ class DataSekolahSMP extends Component
         'status_sekolah' => 'Negeri',
         'desa_kelurahan' => '',
         'alamat_jalan' => '',
-        'generate_account' => false, // Default false for SMP
+        'rt' => '',
+        'rw' => '',
+        'lintang' => '',
+        'bujur' => '',
+        'kode_wilayah' => '',
+        'bentuk_pendidikan_id' => 'SMP',
     ];
     public $showCreateModal = false;
     public $isEditMode = false;
@@ -58,7 +63,7 @@ class DataSekolahSMP extends Component
         $this->reset(['form', 'isEditMode', 'editId']);
         $this->form['status_sekolah'] = 'Negeri';
         $this->form['mode_spmb'] = 'Semi Online';
-        $this->form['generate_account'] = false; // Default false
+        $this->form['bentuk_pendidikan_id'] = 'SMP';
         $this->showCreateModal = true;
     }
 
@@ -76,7 +81,12 @@ class DataSekolahSMP extends Component
             'mode_spmb' => $sekolah->mode_spmb,
             'desa_kelurahan' => $sekolah->desa_kelurahan ?? '',
             'alamat_jalan' => $sekolah->alamat_jalan ?? '',
-            'generate_account' => false,
+            'rt' => $sekolah->rt ?? '',
+            'rw' => $sekolah->rw ?? '',
+            'lintang' => $sekolah->lintang ?? '',
+            'bujur' => $sekolah->bujur ?? '',
+            'kode_wilayah' => $sekolah->kode_wilayah ?? '',
+            'bentuk_pendidikan_id' => $sekolah->bentuk_pendidikan_id ?? 'SMP',
         ];
 
         $this->showCreateModal = true;
@@ -97,6 +107,12 @@ class DataSekolahSMP extends Component
             'form.mode_spmb' => 'required|in:Full Online,Semi Online',
             'form.desa_kelurahan' => 'nullable|string|max:255',
             'form.alamat_jalan' => 'nullable|string|max:500',
+            'form.rt' => 'nullable|string|max:5',
+            'form.rw' => 'nullable|string|max:5',
+            'form.lintang' => 'nullable|numeric',
+            'form.bujur' => 'nullable|numeric',
+            'form.kode_wilayah' => 'nullable|string|max:20',
+            'form.bentuk_pendidikan_id' => 'nullable|string|max:50',
         ], [
             'form.npsn.unique' => 'NPSN sudah terdaftar.',
             'form.npsn.numeric' => 'NPSN harus berupa angka.',
@@ -112,11 +128,13 @@ class DataSekolahSMP extends Component
                 'mode_spmb' => $this->form['mode_spmb'],
                 'desa_kelurahan' => $this->form['desa_kelurahan'],
                 'alamat_jalan' => $this->form['alamat_jalan'],
+                'rt' => $this->form['rt'],
+                'rw' => $this->form['rw'],
+                'lintang' => $this->form['lintang'],
+                'bujur' => $this->form['bujur'],
+                'kode_wilayah' => $this->form['kode_wilayah'],
+                'bentuk_pendidikan_id' => $this->form['bentuk_pendidikan_id'],
             ]);
-
-            if ($this->form['generate_account']) {
-                $this->generateOpsmpAccount($sekolah);
-            }
 
             $this->showCreateModal = false;
             $this->reset('form');
@@ -136,6 +154,12 @@ class DataSekolahSMP extends Component
             'form.mode_spmb' => 'required|in:Full Online,Semi Online',
             'form.desa_kelurahan' => 'nullable|string|max:255',
             'form.alamat_jalan' => 'nullable|string|max:500',
+            'form.rt' => 'nullable|string|max:5',
+            'form.rw' => 'nullable|string|max:5',
+            'form.lintang' => 'nullable|numeric',
+            'form.bujur' => 'nullable|numeric',
+            'form.kode_wilayah' => 'nullable|string|max:20',
+            'form.bentuk_pendidikan_id' => 'nullable|string|max:50',
         ], [
             'form.npsn.unique' => 'NPSN sudah terdaftar.',
             'form.npsn.numeric' => 'NPSN harus berupa angka.',
@@ -151,11 +175,13 @@ class DataSekolahSMP extends Component
                 'mode_spmb' => $this->form['mode_spmb'],
                 'desa_kelurahan' => $this->form['desa_kelurahan'],
                 'alamat_jalan' => $this->form['alamat_jalan'],
+                'rt' => $this->form['rt'],
+                'rw' => $this->form['rw'],
+                'lintang' => $this->form['lintang'],
+                'bujur' => $this->form['bujur'],
+                'kode_wilayah' => $this->form['kode_wilayah'],
+                'bentuk_pendidikan_id' => $this->form['bentuk_pendidikan_id'],
             ]);
-
-            if ($this->form['generate_account']) {
-                $this->generateOpsmpAccount($sekolah);
-            }
 
             $this->showCreateModal = false;
             $this->reset(['form', 'isEditMode', 'editId']);
@@ -208,7 +234,7 @@ class DataSekolahSMP extends Component
 
         if (!$existingUser) {
             User::create([
-                'name' => 'Operator ' . $sekolah->npsn,
+                'name' => $sekolah->nama,
                 'username' => $sekolah->npsn,
                 'password' => Hash::make($sekolah->npsn),
                 'role' => 'opsmp',
@@ -216,9 +242,13 @@ class DataSekolahSMP extends Component
                 'is_active' => true,
             ]);
         } else {
-            if (!$existingUser->sekolah_id) {
-                $existingUser->update(['sekolah_id' => $sekolah->sekolah_id]);
-            }
+            $existingUser->update([
+                'name' => $sekolah->nama,
+                'password' => Hash::make($sekolah->npsn),
+                'sekolah_id' => $sekolah->sekolah_id,
+                'role' => 'opsmp',
+                'is_active' => true,
+            ]);
         }
     }
 
@@ -230,6 +260,7 @@ class DataSekolahSMP extends Component
                     ->orWhere('npsn', 'like', '%' . $this->search . '%')
                     ->orWhere('desa_kelurahan', 'like', '%' . $this->search . '%');
             })
+            ->with('operator')
             ->orderBy('nama')
             ->paginate(15);
 
@@ -237,6 +268,28 @@ class DataSekolahSMP extends Component
             'sekolahList' => $sekolah,
         ]);
     }
+
+    public function resetTwoFactor($sekolahId)
+    {
+        try {
+            $sekolah = SekolahMenengahPertama::findOrFail($sekolahId);
+            $user = $sekolah->operator;
+
+            if ($user && $user->two_factor_secret) {
+                $user->update([
+                    'two_factor_secret' => null,
+                    'two_factor_recovery_codes' => null,
+                    'two_factor_confirmed_at' => null,
+                ]);
+                $this->dispatch('import-success', message: '2FA berhasil direset untuk operator sekolah ini.');
+            } else {
+                $this->dispatch('import-error', message: 'Operator tidak ditemukan atau 2FA belum aktif.');
+            }
+        } catch (\Exception $e) {
+            $this->dispatch('import-error', message: 'Gagal mereset 2FA: ' . $e->getMessage());
+        }
+    }
+
 
     public function paginationView()
     {

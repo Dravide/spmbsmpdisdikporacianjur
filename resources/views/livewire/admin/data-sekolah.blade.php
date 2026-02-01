@@ -76,18 +76,35 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-warning"
-                                        wire:click="edit('{{ $sekolah->sekolah_id }}')">
-                                        <i class="fi fi-rr-edit"></i> Edit
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                        onclick="confirmDelete('{{ $sekolah->sekolah_id }}', '{{ $sekolah->nama }}')">
-                                        <i class="fi fi-rr-trash"></i> Hapus
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        wire:click="showDetailModal('{{ $sekolah->sekolah_id }}')">
-                                        <i class="fi fi-rr-eye"></i> Detail
-                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light btn-icon" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fi fi-rr-menu-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                            <li>
+                                                <button class="dropdown-item"
+                                                    wire:click="showDetailModal('{{ $sekolah->sekolah_id }}')">
+                                                    <i class="fi fi-rr-eye me-2"></i> Detail
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item"
+                                                    wire:click="edit('{{ $sekolah->sekolah_id }}')">
+                                                    <i class="fi fi-rr-edit me-2"></i> Edit
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger"
+                                                    onclick="confirmDelete('{{ $sekolah->sekolah_id }}', '{{ $sekolah->nama }}')">
+                                                    <i class="fi fi-rr-trash me-2"></i> Hapus
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

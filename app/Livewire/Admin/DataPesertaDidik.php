@@ -43,6 +43,77 @@ class DataPesertaDidik extends Component
         'sekolah_id' => '',
     ];
 
+    // Filter Properties
+    public $filterSekolah;
+    public $filterKecamatan;
+    public $filterDesa;
+    public $filterJk;
+
+    // Filter Data Lists
+    public $sekolahList = [];
+    public $kecamatanList = [];
+    public $desaList = [];
+
+    public function mount()
+    {
+        $this->loadFilterData();
+    }
+
+    public function loadFilterData()
+    {
+        // Load Sekolah List (Compact: ID => Nama)
+        // Changed to SekolahDasar as per user request
+        $this->sekolahList = \App\Models\SekolahDasar::orderBy('nama')->pluck('nama', 'sekolah_id')->toArray();
+
+        // Load Kecamatan List from API or Database
+        $this->loadKecamatanList();
+    }
+
+    public function loadKecamatanList()
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(5)->get('https://wilayah.id/api/districts/32.03.json');
+            if ($response->successful()) {
+                $this->kecamatanList = $response->json('data') ?? [];
+            }
+        } catch (\Exception $e) {
+            $this->kecamatanList = [];
+        }
+    }
+
+    public function updatedFilterKecamatan($value)
+    {
+        $this->filterDesa = '';
+        $this->desaList = [];
+
+        if ($value) {
+            // Find code 
+            $selected = collect($this->kecamatanList)->firstWhere('name', $value);
+            if ($selected) {
+                $this->loadDesaList($selected['code']);
+            }
+        }
+    }
+
+    public function loadDesaList($code)
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(5)->get("https://wilayah.id/api/villages/{$code}.json");
+            if ($response->successful()) {
+                $this->desaList = $response->json('data') ?? [];
+            }
+        } catch (\Exception $e) {
+            $this->desaList = [];
+        }
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['filterSekolah', 'filterKecamatan', 'filterDesa', 'filterJk', 'desaList']);
+        // Re-emit for Select2 clear
+        $this->dispatch('filters-reset');
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -331,10 +402,16 @@ class DataPesertaDidik extends Component
         $data = PesertaDidik::query()
             ->with('sekolah')
             ->when($this->search, function ($q) {
-                $q->where('nama', 'like', "%{$this->search}%")
-                    ->orWhere('nisn', 'like', "%{$this->search}%")
-                    ->orWhere('nik', 'like', "%{$this->search}%");
+                $q->where(function ($sub) {
+                    $sub->where('nama', 'like', "%{$this->search}%")
+                        ->orWhere('nisn', 'like', "%{$this->search}%")
+                        ->orWhere('nik', 'like', "%{$this->search}%");
+                });
             })
+            ->when($this->filterSekolah, fn($q) => $q->where('sekolah_id', $this->filterSekolah))
+            ->when($this->filterKecamatan, fn($q) => $q->where('kecamatan', $this->filterKecamatan))
+            ->when($this->filterDesa, fn($q) => $q->where('desa_kelurahan', $this->filterDesa))
+            ->when($this->filterJk, fn($q) => $q->where('jenis_kelamin', $this->filterJk))
             ->paginate(15);
 
         return view('livewire.admin.data-peserta-didik', [

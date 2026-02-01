@@ -36,6 +36,7 @@
                     <thead class="bg-light">
                         <tr>
                             <th class="border-0">Nama Jalur</th>
+                            <th class="border-0 text-center">Kuota</th>
                             <th class="border-0">Tanggal</th>
                             <th class="border-0">Berkas</th>
                             <th class="border-0 text-center">Status</th>
@@ -48,6 +49,9 @@
                                 <td>
                                     <span class="fw-medium d-block">{{ $item->nama }}</span>
                                     <small class="text-muted">{{ Str::limit($item->deskripsi, 30) }}</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary-subtle text-primary">{{ $item->kuota ?? 0 }}%</span>
                                 </td>
                                 <td>
                                     @if($item->start_date && $item->end_date)
@@ -71,13 +75,29 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-outline-primary me-1">
-                                        <i class="fi fi-rr-edit"></i>
-                                    </button>
-                                    <button wire:confirm="Yakin ingin menghapus jalur ini?"
-                                        wire:click="confirmDelete({{ $item->id }})" class="btn btn-sm btn-outline-danger">
-                                        <i class="fi fi-rr-trash"></i>
-                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light btn-icon" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fi fi-rr-menu-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                            <li>
+                                                <button class="dropdown-item" wire:click="edit({{ $item->id }})">
+                                                    <i class="fi fi-rr-edit me-2"></i> Edit
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger"
+                                                    wire:confirm="Yakin ingin menghapus jalur ini?"
+                                                    wire:click="confirmDelete({{ $item->id }})">
+                                                    <i class="fi fi-rr-trash me-2"></i> Hapus
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -136,6 +156,17 @@
                                         wire:model="end_date">
                                     @error('end_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Kuota (%) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control @error('kuota') is-invalid @enderror"
+                                        wire:model="kuota" placeholder="Contoh: 50" min="0" max="100">
+                                    <span class="input-group-text">%</span>
+                                    @error('kuota') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="form-text">Persentase dari total daya tampung sekolah.</div>
                             </div>
 
                             <div class="mb-3">

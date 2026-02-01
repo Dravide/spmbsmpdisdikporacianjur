@@ -72,8 +72,14 @@
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <button wire:click="removeField({{ $index }})" class="btn btn-outline-danger btn-sm"><i
-                                            class="fi fi-rr-trash"></i></button>
+                                    <button wire:click="duplicateField({{ $index }})"
+                                        class="btn btn-outline-info btn-sm me-1" title="Duplikat">
+                                        <i class="fi fi-rr-copy"></i>
+                                    </button>
+                                    <button wire:click="removeField({{ $index }})" class="btn btn-outline-danger btn-sm"
+                                        title="Hapus">
+                                        <i class="fi fi-rr-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         @empty

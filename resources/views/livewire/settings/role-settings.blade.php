@@ -43,13 +43,24 @@
                             @enderror
                             <small class="text-muted">Sesi akan berakhir setelah tidak aktif selama waktu ini.</small>
                         </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="multiSession{{ $index }}"
-                                wire:model.defer="settings.{{ $index }}.allow_multiple_sessions">
-                            <label class="form-check-label" for="multiSession{{ $index }}">
-                                Izinkan Multiple Sessions
-                            </label>
+                        <div class="mb-3">
+                            <label class="form-label">Sesi</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    wire:model="settings.{{ $index }}.allow_multiple_sessions">
+                                <label class="form-check-label">Izinkan Multi Login</label>
+                            </div>
                         </div>
+                        @if(in_array($setting['role'], ['admin', 'opsmp']))
+                            <div class="mb-3">
+                                <label class="form-label">Keamanan</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        wire:model="settings.{{ $index }}.two_factor_required">
+                                    <label class="form-check-label text-danger fw-bold">Wajib 2FA (Google Auth)</label>
+                                </div>
+                            </div>
+                        @endif
                         <button type="button" class="btn btn-primary w-100" wire:click="updateSetting({{ $index }})"
                             wire:loading.attr="disabled">
                             <span wire:loading.remove wire:target="updateSetting({{ $index }})">Simpan</span>

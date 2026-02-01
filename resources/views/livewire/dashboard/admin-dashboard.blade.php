@@ -54,21 +54,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar avatar-md bg-warning bg-opacity-10 text-warning rounded-circle">
-                            <i class="fi fi-rr-graduation-cap"></i>
-                        </div>
-                        <div class="ms-3">
-                            <h3 class="mb-0">{{ $usersByRole['cmb'] ?? 0 }}</h3>
-                            <small class="text-muted">Calon Murid</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
     </div>
 
     <div class="row g-3">

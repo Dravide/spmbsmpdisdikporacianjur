@@ -17,7 +17,7 @@ class DataJalur extends Component
     public $perPage = 10;
 
     // Form fields
-    public $nama, $deskripsi, $aktif = true, $start_date, $end_date;
+    public $nama, $deskripsi, $aktif = true, $kuota, $start_date, $end_date;
     public $selectedBerkas = []; // Array of Berkas IDs
     public $jalurId;
     public $isEditMode = false;
@@ -27,6 +27,7 @@ class DataJalur extends Component
         'nama' => 'required|string|max:255',
         'deskripsi' => 'nullable|string',
         'aktif' => 'boolean',
+        'kuota' => 'required|numeric|min:0|max:100',
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
         'selectedBerkas' => 'array',
@@ -40,7 +41,7 @@ class DataJalur extends Component
 
     public function create()
     {
-        $this->reset(['nama', 'deskripsi', 'aktif', 'start_date', 'end_date', 'selectedBerkas', 'jalurId', 'isEditMode']);
+        $this->reset(['nama', 'deskripsi', 'aktif', 'kuota', 'start_date', 'end_date', 'selectedBerkas', 'jalurId', 'isEditMode']);
         $this->aktif = true;
         $this->isEditMode = false;
         $this->showFormModal = true;
@@ -53,6 +54,7 @@ class DataJalur extends Component
         $this->nama = $jalur->nama;
         $this->deskripsi = $jalur->deskripsi;
         $this->aktif = (bool) $jalur->aktif;
+        $this->kuota = $jalur->kuota;
         $this->start_date = $jalur->start_date ? $jalur->start_date->format('Y-m-d') : null;
         $this->end_date = $jalur->end_date ? $jalur->end_date->format('Y-m-d') : null;
 
@@ -71,6 +73,7 @@ class DataJalur extends Component
             'nama' => $this->nama,
             'deskripsi' => $this->deskripsi,
             'aktif' => $this->aktif,
+            'kuota' => $this->kuota,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
         ];
@@ -87,7 +90,7 @@ class DataJalur extends Component
         }
 
         $this->showFormModal = false;
-        $this->reset(['nama', 'deskripsi', 'aktif', 'start_date', 'end_date', 'selectedBerkas', 'jalurId', 'isEditMode']);
+        $this->reset(['nama', 'deskripsi', 'aktif', 'kuota', 'start_date', 'end_date', 'selectedBerkas', 'jalurId', 'isEditMode']);
 
         session()->flash('message', $message);
     }

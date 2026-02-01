@@ -98,6 +98,12 @@
                     </div>
                 </form>
 
+                <div class="mt-4 text-center">
+                    <p class="mb-0">Siswa dari luar wilayah / belum terdaftar? <br>
+                        <a href="{{ route('register-mandiri') }}" class="fw-bold text-primary">Daftar Akun Mandiri</a>
+                    </p>
+                </div>
+
                 <div class="text-center mt-4">
                     <small class="text-muted">
                         &copy; {{ date('Y') }} Disdikpora Kabupaten Cianjur

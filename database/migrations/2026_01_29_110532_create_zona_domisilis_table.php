@@ -9,14 +9,14 @@ return new class extends Migration {
     {
         Schema::create('zona_domisilis', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('sekolah_menengah_pertama_id');
+            $table->uuid('sekolah_id');
             $table->string('kecamatan');
             $table->string('desa')->nullable();
             $table->string('rw')->nullable();
             $table->string('rt')->nullable();
             $table->timestamps();
 
-            $table->index('sekolah_menengah_pertama_id');
+            $table->index('sekolah_id');
         });
     }
 

@@ -26,6 +26,7 @@ class PesertaDidik extends Authenticatable
         'nisn',
         'alamat_jalan',
         'desa_kelurahan',
+        'kecamatan',
         'rt',
         'rw',
         'nama_dusun',
@@ -44,6 +45,9 @@ class PesertaDidik extends Authenticatable
         'lintang',
         'bujur',
         'flag_pip',
+        'is_external',
+        'verification_status',
+        'verification_note',
     ];
 
     protected $hidden = [
@@ -56,6 +60,22 @@ class PesertaDidik extends Authenticatable
         'bujur' => 'double',
         'password' => 'hashed',
     ];
+
+    /**
+     * Get username (NISN) for compatibility.
+     */
+    public function getUsernameAttribute()
+    {
+        return $this->nisn;
+    }
+
+    /**
+     * Get role label for compatibility.
+     */
+    public function getRoleLabelAttribute()
+    {
+        return 'Calon Murid Baru';
+    }
 
     /**
      * Role helpers for polymorphic view compatibility
@@ -81,8 +101,60 @@ class PesertaDidik extends Authenticatable
      * Get the school that owns the student.
      * Assuming Sekolah Dasar for now as per context, but could be generic if needed.
      */
+    /**
+     * Get the school that owns the student.
+     * Assuming Sekolah Dasar for now as per context, but could be generic if needed.
+     */
     public function sekolah(): BelongsTo
     {
         return $this->belongsTo(SekolahDasar::class, 'sekolah_id', 'sekolah_id');
+    }
+
+    /**
+     * Get the registration for the student.
+     */
+    public function pendaftaran()
+    {
+        return $this->hasOne(Pendaftaran::class, 'peserta_didik_id', 'id')->latestOfMany();
+    }
+
+    /**
+     * Check for missing mandatory fields
+     */
+    /**
+     * Define mandatory fields for consistency
+     */
+    protected static function mandatoryFields()
+    {
+        return [
+            'kecamatan' => 'Kecamatan',
+        ];
+    }
+
+    /**
+     * Check if there is any missing data (Fail Fast)
+     */
+    public function getHasMissingDataAttribute()
+    {
+        foreach (self::mandatoryFields() as $field => $label) {
+            if (empty($this->$field)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get list of missing mandatory fields
+     */
+    public function getMissingDataAttribute()
+    {
+        $missing = [];
+        foreach (self::mandatoryFields() as $field => $label) {
+            if (empty($this->$field)) {
+                $missing[] = $label;
+            }
+        }
+        return $missing;
     }
 }

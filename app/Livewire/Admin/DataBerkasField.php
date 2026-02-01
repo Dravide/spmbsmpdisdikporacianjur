@@ -43,6 +43,18 @@ class DataBerkasField extends Component
         $this->formFields = array_values($this->formFields);
     }
 
+    public function duplicateField($index)
+    {
+        if (isset($this->formFields[$index])) {
+            $field = $this->formFields[$index];
+            $field['label'] .= ' (Copy)';
+            $field['name'] .= '_copy_' . rand(100, 999); // Ensure uniqueness
+
+            // Insert after current index
+            array_splice($this->formFields, $index + 1, 0, [$field]);
+        }
+    }
+
     public function save()
     {
         $this->validate();

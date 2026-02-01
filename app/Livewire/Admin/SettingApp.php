@@ -15,6 +15,7 @@ class SettingApp extends Component
 
     public $app_name;
     public $app_logo_text;
+    public $site_mode; // normal, maintenance, coming_soon
     public $app_logo_image;
     public $existing_logo_image;
     public $app_logo_text_image;
@@ -24,6 +25,7 @@ class SettingApp extends Component
     {
         $this->app_name = get_setting('app_name', 'SPMB Cianjur');
         $this->app_logo_text = get_setting('app_logo_text', 'SPMB');
+        $this->site_mode = get_setting('site_mode', 'normal');
         $this->existing_logo_image = get_setting('app_logo_image');
         $this->existing_logo_text_image = get_setting('app_logo_text_image');
     }
@@ -33,12 +35,19 @@ class SettingApp extends Component
         $this->validate([
             'app_name' => 'required|string|max:255',
             'app_logo_text' => 'nullable|string|max:50',
+            'site_mode' => 'required|in:normal,maintenance,coming_soon',
             'app_logo_image' => 'nullable|image|max:2048', // 2MB Max
             'app_logo_text_image' => 'nullable|image|max:2048', // 2MB Max
         ]);
 
         Setting::updateOrCreate(['key' => 'app_name'], ['value' => $this->app_name]);
+        \Illuminate\Support\Facades\Cache::forget('setting_app_name');
+
         Setting::updateOrCreate(['key' => 'app_logo_text'], ['value' => $this->app_logo_text]);
+        \Illuminate\Support\Facades\Cache::forget('setting_app_logo_text');
+
+        Setting::updateOrCreate(['key' => 'site_mode'], ['value' => $this->site_mode]);
+        \Illuminate\Support\Facades\Cache::forget('setting_site_mode');
 
         if ($this->app_logo_image) {
             // Delete old image if exists
@@ -48,6 +57,7 @@ class SettingApp extends Component
 
             $path = $this->app_logo_image->store('settings', 'public');
             Setting::updateOrCreate(['key' => 'app_logo_image'], ['value' => $path]);
+            \Illuminate\Support\Facades\Cache::forget('setting_app_logo_image');
             $this->existing_logo_image = $path;
         }
 
@@ -59,6 +69,7 @@ class SettingApp extends Component
 
             $path = $this->app_logo_text_image->store('settings', 'public');
             Setting::updateOrCreate(['key' => 'app_logo_text_image'], ['value' => $path]);
+            \Illuminate\Support\Facades\Cache::forget('setting_app_logo_text_image');
             $this->existing_logo_text_image = $path;
         }
 

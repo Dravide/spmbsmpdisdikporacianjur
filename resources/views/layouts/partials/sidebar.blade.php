@@ -78,6 +78,12 @@
                         <span class="menu-label">Pemetaan Domisili</span>
                     </a>
                 </li>
+                <li class="menu-item {{ request()->routeIs('admin.daya-tampung') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('admin.daya-tampung') }}">
+                        <i class="fi fi-rr-chart-pie-alt"></i>
+                        <span class="menu-label">Daya Tampung</span>
+                    </a>
+                </li>
 
                 {{-- Data Pendaftaran --}}
                 <li class="menu-heading">
@@ -98,12 +104,23 @@
 
                 {{-- Pengaturan --}}
                 <li class="menu-heading">
-                    <span class="menu-label">Pengaturan</span>
+                    <span class="menu-label">Pengaturan & Sistem</span>
                 </li>
                 <li class="menu-item {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
                     <a class="menu-link" href="{{ route('admin.settings') }}">
                         <i class="fi fi-rr-settings"></i>
                         <span class="menu-label">Pengaturan Aplikasi</span>
+                    </a>
+                </li>
+
+                {{-- Manajemen Pengguna --}}
+                <li class="menu-heading">
+                    <span class="menu-label">Manajemen Pengguna</span>
+                </li>
+                <li class="menu-item {{ request()->routeIs('admin.data-admin') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('admin.data-admin') }}">
+                        <i class="fi fi-rr-user-shield"></i>
+                        <span class="menu-label">Data Administrator</span>
                     </a>
                 </li>
                 <li class="menu-item {{ request()->routeIs('settings*') ? 'active' : '' }}">
@@ -142,25 +159,27 @@
                         <span class="menu-label">Data Pendaftaran</span>
                     </a>
                 </li>
+                <li class="menu-item {{ request()->routeIs('opsmp.jalur-verified') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('opsmp.jalur-verified') }}">
+                        <i class="fi fi-rr-list-check"></i>
+                        <span class="menu-label">List Jalur</span>
+                    </a>
+                </li>
+                <li class="menu-item {{ request()->routeIs('opsmp.pemetaan-domisili') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('opsmp.pemetaan-domisili') }}">
+                        <i class="fi fi-rr-map-marker"></i>
+                        <span class="menu-label">Pemetaan Domisili</span>
+                    </a>
+                </li>
+                <li class="menu-item {{ request()->routeIs('opsmp.daya-tampung') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('opsmp.daya-tampung') }}">
+                        <i class="fi fi-rr-chart-pie-alt"></i>
+                        <span class="menu-label">Daya Tampung</span>
+                    </a>
+                </li>
             @endif
 
-            @if(auth()->user()->isCmb())
-                <li class="menu-heading">
-                    <span class="menu-label">Pendaftaran</span>
-                </li>
-                <li class="menu-item">
-                    <a class="menu-link" href="#">
-                        <i class="fi fi-rr-document"></i>
-                        <span class="menu-label">Formulir</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a class="menu-link" href="#">
-                        <i class="fi fi-rr-file-upload"></i>
-                        <span class="menu-label">Berkas</span>
-                    </a>
-                </li>
-            @endif
+
 
 
             @if(auth('siswa')->check())
@@ -180,7 +199,7 @@
                             // Check if already registered
                             $isRegistered = \App\Models\Pendaftaran::where('peserta_didik_id', auth('siswa')->id())->exists();
                         @endphp
-                        <span class="menu-label">{{ $isRegistered ? 'Status Pendaftaran' : 'Daftar PPDB' }}</span>
+                        <span class="menu-label">{{ $isRegistered ? 'Status Pendaftaran' : 'Daftar SPMB' }}</span>
                     </a>
                 </li>
             @endif

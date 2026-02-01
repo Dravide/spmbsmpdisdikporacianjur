@@ -102,7 +102,7 @@
                                         {{ ucfirst($pendaftaran->status) }}
                                     </span>
                                 </td>
-                                <td>{{ $pendaftaran->tanggal_daftar?->format('d/m/Y') ?? '-' }}</td>
+                                <td>{{ $pendaftaran->tanggal_daftar?->locale('id')->translatedFormat('d F Y') ?? '-' }}</td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-outline-primary"
                                         wire:click="showDetail('{{ $pendaftaran->id }}')">
@@ -214,7 +214,7 @@
                                     <tr>
                                         <td class="text-muted">Tanggal Daftar</td>
                                         <td class="fw-bold">
-                                            {{ $selectedPendaftaran->tanggal_daftar?->format('d F Y') ?? '-' }}</td>
+                                            {{ $selectedPendaftaran->tanggal_daftar?->locale('id')->translatedFormat('d F Y') ?? '-' }}</td>
                                     </tr>
                                 </table>
                             </div>

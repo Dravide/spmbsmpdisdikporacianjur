@@ -55,7 +55,7 @@
         @if(!$isApproved)
             <div class="mb-2">
                 <label class="form-label small mb-1">
-                    {{ $existingFile ? 'Ganti File' : 'Upload File' }}
+                    {{ $existingFile ? 'Ganti File' : 'Upload File' }} <span class="text-muted">(Maks {{ $berkas->max_size_kb ?? 2048 }} KB)</span>
                 </label>
                 <input type="file" class="form-control form-control-sm" wire:model="berkasFiles.{{ $berkas->id }}" accept=".pdf,.jpg,.jpeg,.png">
                 @error("berkasFiles.{$berkas->id}") <div class="text-danger small mt-1">{{ $message }}</div> @enderror

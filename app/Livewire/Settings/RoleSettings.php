@@ -28,6 +28,7 @@ class RoleSettings extends Component
                 'max_login_locations' => $setting->max_login_locations,
                 'session_timeout_minutes' => $setting->session_timeout_minutes,
                 'allow_multiple_sessions' => $setting->allow_multiple_sessions,
+                'two_factor_required' => $setting->two_factor_required,
             ];
         })->toArray();
     }
@@ -39,6 +40,7 @@ class RoleSettings extends Component
         $validated = $this->validate([
             "settings.{$index}.max_login_locations" => 'required|integer|min:1|max:100',
             "settings.{$index}.session_timeout_minutes" => 'required|integer|min:5|max:1440',
+            "settings.{$index}.two_factor_required" => 'boolean',
         ], [
             "settings.{$index}.max_login_locations.required" => 'Batas lokasi wajib diisi',
             "settings.{$index}.max_login_locations.min" => 'Minimal 1 lokasi',
@@ -50,6 +52,7 @@ class RoleSettings extends Component
             'max_login_locations' => $setting['max_login_locations'],
             'session_timeout_minutes' => $setting['session_timeout_minutes'],
             'allow_multiple_sessions' => $setting['allow_multiple_sessions'],
+            'two_factor_required' => $setting['two_factor_required'] ?? false,
         ]);
 
         session()->flash('success', "Pengaturan {$setting['role_label']} berhasil diperbarui!");
