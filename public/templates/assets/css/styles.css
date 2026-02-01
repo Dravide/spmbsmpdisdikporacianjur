@@ -14293,7 +14293,7 @@ strong {
 
 .app-navbar {
   padding: 15px;
-  height: calc(100% - (var(--app-header-height) + 65px));
+  height: calc(100% - var(--app-header-height));
   width: var(--app-sidebar-width);
 }
 .app-navbar .menu-arrow > .menu-link {

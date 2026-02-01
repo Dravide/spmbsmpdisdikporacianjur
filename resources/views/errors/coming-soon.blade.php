@@ -34,16 +34,26 @@
                     <div class="coming-wrapper">
                         <div class="maintenance-wrapper mb-5">
                             <div class="mb-4">
-                                <a href="{{ url('/') }}" aria-label="Logo">
+                                <a href="{{ url('/') }}" aria-label="Logo"
+                                    class="d-inline-flex align-items-center justify-content-center text-decoration-none gap-2">
                                     @if(function_exists('get_setting') && get_setting('app_logo_image'))
-                                        <img class="visible-light"
-                                            src="{{ asset('storage/' . get_setting('app_logo_image')) }}" alt="Logo"
-                                            style="max-height: 50px;">
-                                        <img class="visible-dark"
-                                            src="{{ asset('storage/' . get_setting('app_logo_image')) }}" alt="Logo"
-                                            style="max-height: 50px;">
+                                        <img src="{{ asset('storage/' . get_setting('app_logo_image')) }}" alt="Logo"
+                                            style="height: 48px;">
                                     @else
-                                        <h2 class="fw-bold text-primary">{{ get_setting('app_logo_text', 'SPMB') }}</h2>
+                                        <img src="{{ asset('templates/assets/images/logo.svg') }}" alt="Logo"
+                                            style="height: 48px;">
+                                    @endif
+
+                                    @if(function_exists('get_setting') && get_setting('app_logo_text_image'))
+                                        <img src="{{ asset('storage/' . get_setting('app_logo_text_image')) }}"
+                                            alt="Logo Text" style="height: 40px;" class="ms-2">
+                                    @else
+                                        <span class="visible-light fw-bold fs-3 text-dark">
+                                            {{ function_exists('get_setting') ? get_setting('app_logo_text', 'SPMB') : 'SPMB' }}
+                                        </span>
+                                        <span class="visible-dark fw-bold fs-3 text-white">
+                                            {{ function_exists('get_setting') ? get_setting('app_logo_text', 'SPMB') : 'SPMB' }}
+                                        </span>
                                     @endif
                                 </a>
                             </div>

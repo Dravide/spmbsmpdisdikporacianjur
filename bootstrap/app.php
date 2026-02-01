@@ -6,20 +6,37 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
         then: function () {
+            // Main Domain
+            Route::middleware('web')
+                ->domain('spmbsmpdisdikporacianjur.local')
+                ->group(base_path('routes/web.php'));
+
+            // Auth Domain
+            Route::middleware('web')
+                ->domain('auth.spmbsmpdisdikporacianjur.local')
+                ->group(base_path('routes/auth.php'));
+
+            // Admin Domain
             Route::middleware(['web', 'auth', 'two-factor', 'role:admin'])
+                ->domain('admin.spmbsmpdisdikporacianjur.local')
                 ->group(base_path('routes/admin.php'));
 
-            Route::middleware(['web', 'auth', 'two-factor', 'role:opsd'])
-                ->group(base_path('routes/opsd.php'));
-
+            // OPSMP Domain (Dash)
             Route::middleware(['web', 'auth', 'two-factor', 'role:opsmp'])
+                ->domain('dash.spmbsmpdisdikporacianjur.local')
                 ->group(base_path('routes/opsmp.php'));
 
-            Route::middleware(['web', 'auth:siswa'])
+            // OPSD Domain (Operator)
+            Route::middleware(['web', 'auth', 'two-factor', 'role:opsd'])
+                ->domain('operator.spmbsmpdisdikporacianjur.local')
+                ->group(base_path('routes/opsd.php'));
+
+            // Siswa Domain (Pendaftaran)
+            Route::middleware(['web'])
+                ->domain('pendaftaran.spmbsmpdisdikporacianjur.local')
                 ->group(base_path('routes/siswa.php'));
         },
     )

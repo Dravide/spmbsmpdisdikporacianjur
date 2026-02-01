@@ -29,7 +29,8 @@
             @else
                 <form wire:submit.prevent="verifyWithRecoveryCode">
                     <div class="mb-3">
-                        <input type="text" class="form-control" wire:model="recoveryCode" placeholder="Masukan kode pemulihan">
+                        <input type="text" class="form-control" wire:model="recoveryCode"
+                            placeholder="Masukan kode pemulihan">
                         @error('recoveryCode')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -42,6 +43,16 @@
                     </button>
                 </div>
             @endif
+
+
+            <div class="border-top pt-3 mt-4 text-center">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-link text-danger text-decoration-none btn-sm">
+                        <i class="fi fi-rr-sign-out-alt me-1"></i> Batalkan & Logout
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>

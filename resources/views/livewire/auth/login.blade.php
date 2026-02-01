@@ -106,7 +106,7 @@
 
                 <div class="text-center mt-4">
                     <small class="text-muted">
-                        &copy; {{ date('Y') }} Disdikpora Kabupaten Cianjur
+                        &copy; {{ date('Y') }} DISDIKPORA Kabupaten Cianjur
                     </small>
                 </div>
             </div>

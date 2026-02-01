@@ -2,6 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/siswa', \App\Livewire\Dashboard\StudentDashboard::class)->name('siswa.dashboard');
-Route::get('/siswa/pendaftaran', \App\Livewire\Student\StudentRegistration::class)->name('siswa.pendaftaran');
-Route::get('/siswa/cetak-kartu/{id}', [\App\Http\Controllers\PrintController::class, 'cetakKartu'])->name('print.kartu');
+// Guest Routes for Pendaftaran Subdomain
+Route::middleware('guest:siswa')->group(function () {
+    Route::get('/register', \App\Livewire\Auth\RegisterMandiri::class)->name('register-mandiri');
+    Route::get('/register-mandiri', \App\Livewire\Auth\RegisterMandiri::class); // Alias just in case
+});
+
+// Protected Routes
+Route::middleware('auth:siswa')->group(function () {
+    Route::get('/', \App\Livewire\Dashboard\StudentDashboard::class)->name('siswa.dashboard');
+
+    // Legacy/Specific routes
+    Route::get('/pendaftaran', \App\Livewire\Student\StudentRegistration::class)->name('siswa.pendaftaran');
+    Route::get('/cetak-kartu/{id}', [\App\Http\Controllers\PrintController::class, 'cetakKartu'])->name('print.kartu');
+});

@@ -16,19 +16,26 @@ class CheckSiteMode
     public function handle(Request $request, Closure $next): Response
     {
         // Allow access to admin, storage, and livewire routes
+        $host = $request->getHost();
+
+        // Allow access to specific subdomains (Admin, Auth, Operators)
         if (
-            $request->is('admin*') ||
+            str_contains($host, 'admin.') ||
+            str_contains($host, 'auth.') ||
+            str_contains($host, 'dash.') || // OPSMP
+            str_contains($host, 'operator.') || // OPSD
+            str_contains($host, 'pendaftaran.') // Siswa
+        ) {
+            return $next($request);
+        }
+
+        // Allow access to specific routes/paths
+        if (
             $request->is('login*') ||
             $request->is('livewire*') ||
             $request->is('storage*') ||
-            $request->is('opsd*') ||
-            $request->is('opsmp*') ||
-            $request->is('siswa*') ||
             $request->is('two-factor*') ||
-            $request->is('settings*') ||
-            $request->is('sessions*') ||
-            $request->is('dashboard*') ||
-            $request->is('register-mandiri*') ||
+            $request->is('register*') || // Allow both /register and /register-mandiri
             $request->is('logout')
         ) {
             return $next($request);

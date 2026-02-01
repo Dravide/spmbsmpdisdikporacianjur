@@ -1,6 +1,6 @@
 // Configuration
 const countdownConfig = {
-    endDate: new Date("2026-08-25T23:59:59").getTime(), // Set your target END DATE and TIME
+    endDate: new Date("2026-05-01T23:59:59").getTime(), // Set your target END DATE and TIME
     autoReset: true,  // true = countdown will repeat infinitely, false = stop on completion
     cycleDurationDays: 10 // if autoReset is true, restart countdown for this many days
 };

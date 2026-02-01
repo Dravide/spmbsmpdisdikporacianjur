@@ -37,6 +37,30 @@
                 </div>
                 <div class="col-md-7">
                     <div class="maintenance-wrapper">
+                        <div class="mb-4">
+                            <a href="{{ url('/') }}" aria-label="Logo"
+                                class="d-inline-flex align-items-center text-decoration-none gap-2">
+                                @if(function_exists('get_setting') && get_setting('app_logo_image'))
+                                    <img src="{{ asset('storage/' . get_setting('app_logo_image')) }}" alt="Logo"
+                                        style="height: 48px;">
+                                @else
+                                    <img src="{{ asset('templates/assets/images/logo.svg') }}" alt="Logo"
+                                        style="height: 48px;">
+                                @endif
+
+                                @if(function_exists('get_setting') && get_setting('app_logo_text_image'))
+                                    <img src="{{ asset('storage/' . get_setting('app_logo_text_image')) }}" alt="Logo Text"
+                                        style="height: 32px;">
+                                @else
+                                    <span class="visible-light fw-bold fs-3 text-dark">
+                                        {{ function_exists('get_setting') ? get_setting('app_logo_text', 'SPMB') : 'SPMB' }}
+                                    </span>
+                                    <span class="visible-dark fw-bold fs-3 text-white">
+                                        {{ function_exists('get_setting') ? get_setting('app_logo_text', 'SPMB') : 'SPMB' }}
+                                    </span>
+                                @endif
+                            </a>
+                        </div>
                         <div class="maintenance-status">Under
                             <br>Construction
                         </div>
@@ -51,12 +75,7 @@
                             <i class="fi fi-rr-refresh me-2"></i> Refresh Halaman
                         </a>
 
-                        @if(function_exists('get_setting') && get_setting('app_logo_image'))
-                            <div class="mt-4">
-                                <img src="{{ asset('storage/' . get_setting('app_logo_image')) }}" alt="Logo"
-                                    style="max-height: 40px; opacity: 0.8;">
-                            </div>
-                        @endif
+
                     </div>
                 </div>
             </div>
