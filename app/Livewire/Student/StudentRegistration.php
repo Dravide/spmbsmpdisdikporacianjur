@@ -98,8 +98,25 @@ class StudentRegistration extends Component
     public $isSubmitted = false;
     public $registrationData = null;
 
+    public $scheduleOpen = true;
+    public $scheduleMessage = '';
+
+
+    public $scheduleStartDate = null;
+
     public function mount()
     {
+        // Check Schedule
+        $this->scheduleOpen = \App\Models\Jadwal::isOpen('pendaftaran');
+        $this->scheduleMessage = \App\Models\Jadwal::getMessage('pendaftaran');
+
+        if (!$this->scheduleOpen) {
+            $jadwal = \App\Models\Jadwal::where('keyword', 'pendaftaran')->first();
+            if ($jadwal && $jadwal->aktif && now()->lessThan($jadwal->tanggal_mulai)) {
+                $this->scheduleStartDate = $jadwal->tanggal_mulai->toISOString();
+            }
+        }
+
         $this->jalurList = JalurPendaftaran::where('aktif', true)->get();
         // Setup initial coordinates from profile if available
         $this->loadDraft();
@@ -534,6 +551,9 @@ class StudentRegistration extends Component
             'selectedJalur' => $this->selectedJalurId ? JalurPendaftaran::find($this->selectedJalurId) : null,
             'selectedSekolah' => $this->selectedSekolahId ? SekolahMenengahPertama::find($this->selectedSekolahId) : null,
             'existingFiles' => $existingFiles,
+            'isScheduleOpen' => $this->scheduleOpen,
+            'scheduleMessage' => $this->scheduleMessage,
+            'scheduleStartDate' => $this->scheduleStartDate,
         ]);
     }
 }

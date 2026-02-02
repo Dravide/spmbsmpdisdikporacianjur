@@ -9,8 +9,11 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class);
 });
 
+// Logout Route - accessible by both web and siswa guards
+Route::middleware(['auth:web,siswa'])->post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 Route::middleware(['auth', 'two-factor'])->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    // 2FA Routes
 
     // 2FA Routes
     Route::get('/two-factor/setup', \App\Livewire\Auth\TwoFactorSetup::class)->name('two-factor.setup');

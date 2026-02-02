@@ -11,6 +11,7 @@ Route::get('/', AdminDashboard::class)->name('admin.dashboard');
 
 Route::get('/settings', RoleSettings::class)->name('settings');
 Route::get('/app-settings', \App\Livewire\Admin\SettingApp::class)->name('admin.settings');
+Route::get('/jadwal', \App\Livewire\Admin\Jadwal\JadwalManager::class)->name('admin.jadwal');
 Route::get('/sessions', ActiveSessions::class)->name('sessions');
 Route::get('/sekolah-sd', DataSekolah::class)->name('admin.sekolah');
 Route::get('/sekolah-sd/import', \App\Livewire\Admin\ImportSekolahSD::class)->name('admin.sekolah-sd.import');

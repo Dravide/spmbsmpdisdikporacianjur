@@ -1,7 +1,7 @@
 <div>
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
-            <h4 class="mb-1">List Jalur & Siswa Terverifikasi</h4>
+            <h4 class="mb-1">Pengolahan Data</h4>
             <p class="text-muted mb-0">Rekapitulasi siswa yang telah diverifikasi berdasarkan jalur pendaftaran.</p>
         </div>
     </div>

@@ -11,7 +11,91 @@
         </div>
     </div>
 
-    @if($isSubmitted && $registrationData)
+    @if(!$isScheduleOpen)
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-5 text-center">
+                <div class="mb-4">
+                    <div class="avatar avatar-xxl bg-danger-subtle text-danger rounded-circle d-flex align-items-center justify-content-center mx-auto">
+                        <i class="fi fi-rr-calendar-clock fs-1"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-3">Pendaftaran Belum Dibuka / Ditutup</h3>
+                <p class="text-muted fs-5 mb-4">{{ $scheduleMessage }}</p>
+                
+                @if($scheduleStartDate)
+                    <div class="mb-4" x-data="countdown('{{ $scheduleStartDate }}')">
+                        <p class="text-xs font-weight-bold text-uppercase text-muted mb-2">Akan dibuka dalam:</p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0 text-primary" x-text="days">00</h3>
+                                <small class="text-muted text-xs">Hari</small>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0 text-primary">:</h3>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0 text-primary" x-text="hours">00</h3>
+                                <small class="text-muted text-xs">Jam</small>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0 text-primary">:</h3>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0 text-primary" x-text="minutes">00</h3>
+                                <small class="text-muted text-xs">Menit</small>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0 text-primary">:</h3>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="fw-bold mb-0 text-primary" x-text="seconds">00</h3>
+                                <small class="text-muted text-xs">Detik</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        document.addEventListener('alpine:init', () => {
+                            Alpine.data('countdown', (targetDate) => ({
+                                target: new Date(targetDate).getTime(),
+                                now: new Date().getTime(),
+                                days: '00',
+                                hours: '00',
+                                minutes: '00',
+                                seconds: '00',
+                                interval: null,
+                                init() {
+                                    this.update();
+                                    this.interval = setInterval(() => {
+                                        this.now = new Date().getTime();
+                                        this.update();
+                                    }, 1000);
+                                },
+                                update() {
+                                    const distance = this.target - this.now;
+                                    
+                                    if (distance < 0) {
+                                        clearInterval(this.interval);
+                                        window.location.reload(); 
+                                        return;
+                                    }
+
+                                    this.days = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
+                                    this.hours = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                                    this.minutes = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                                    this.seconds = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+                                }
+                            }))
+                        })
+                    </script>
+                @endif
+                
+                <a href="{{ route('siswa.dashboard') }}" class="btn btn-primary btn-lg">
+                    <i class="fi fi-rr-arrow-left me-1"></i> Kembali ke Dashboard
+                </a>
+            </div>
+        </div>
+    @elseif($isSubmitted && $registrationData)
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <div class="text-center mb-4">
@@ -119,8 +203,8 @@
                                     <tr>
                                         <td class="text-muted">Koordinat</td>
                                         <td class="fw-bold">
-                                            @if($registrationData->latitude && $registrationData->longitude)
-                                                {{ number_format($registrationData->latitude, 6) }}, {{ number_format($registrationData->longitude, 6) }}
+                                            @if($registrationData->koordinat_lintang && $registrationData->koordinat_bujur)
+                                                {{ number_format($registrationData->koordinat_lintang, 6) }}, {{ number_format($registrationData->koordinat_bujur, 6) }}
                                             @else
                                                 -
                                             @endif
@@ -216,6 +300,26 @@
                 </div>
 
                 <div class="text-center mt-4">
+                    @php
+                        $allVerified = true;
+                        if($registrationData->berkas->isEmpty()) {
+                            $allVerified = false;
+                        } else {
+                            foreach($registrationData->berkas as $file) {
+                                if(!in_array($file->status_berkas, ['approved', 'verified'])) {
+                                    $allVerified = false;
+                                    break;
+                                }
+                            }
+                        }
+                    @endphp
+
+                    @if($allVerified)
+                        <a href="{{ route('print.bukti', $registrationData->id) }}" target="_blank" class="btn btn-success me-2">
+                            <i class="fi fi-rr-print me-1"></i> Cetak Bukti Pendaftaran
+                        </a>
+                    @endif
+
                     <a href="{{ route('siswa.dashboard') }}" class="btn btn-primary">
                         <i class="fi fi-rr-apps me-1"></i> Kembali ke Dashboard
                     </a>

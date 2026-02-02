@@ -7,11 +7,59 @@
             </p>
         </div>
         <div>
-            <a href="{{ route('opsmp.jalur-verified') }}" class="btn btn-secondary">
-                <i class="fi fi-rr-arrow-left me-1"></i> Kembali
-            </a>
+            <div class="d-flex gap-2">
+                @if(count($verifiedStudents) > 0)
+                    <button type="button" onclick="confirmProcess()" class="btn btn-primary">
+                        <i class="fi fi-rr-settings-sliders me-1"></i> Proses Data Pengumuman
+                    </button>
+                @endif
+                <a href="{{ route('opsmp.jalur-verified') }}" class="btn btn-secondary">
+                    <i class="fi fi-rr-arrow-left me-1"></i> Kembali
+                </a>
+            </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            function confirmProcess() {
+                Swal.fire({
+                    title: 'Konfirmasi Proses',
+                    text: "Apakah Anda yakin ingin memproses data pengumuman untuk jalur ini? Data yang sudah diproses akan masuk ke halaman Pengumuman.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Proses!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses...',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        @this.processAnnouncement();
+                    }
+                })
+            }
+
+            document.addEventListener('livewire:initialized', () => {
+                @this.on('processed', (event) => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Data pengumuman berhasil diproses.',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            });
+        </script>
+    @endpush
 
     <!-- Quota info -->
     <div class="row mb-4">

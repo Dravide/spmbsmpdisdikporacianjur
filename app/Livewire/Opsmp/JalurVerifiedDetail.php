@@ -114,6 +114,37 @@ class JalurVerifiedDetail extends Component
         return 0; // Rank 4 and below get 0 points
     }
 
+    public function processAnnouncement()
+    {
+        $this->calculateQuota();
+        $this->loadVerifiedStudents();
+
+        $quota = $this->quotaSlot;
+        $count = 0;
+
+        foreach ($this->verifiedStudents as $student) {
+            $status = $count < $quota ? 'lulus' : 'tidak_lulus';
+
+            \App\Models\Pengumuman::updateOrCreate(
+                [
+                    'pendaftaran_id' => $student->id,
+                ],
+                [
+                    'sekolah_menengah_pertama_id' => $student->sekolah_menengah_pertama_id,
+                    'jalur_pendaftaran_id' => $student->jalur_pendaftaran_id,
+                    'peserta_didik_id' => $student->peserta_didik_id,
+                    'status' => $status,
+                    'keterangan' => $status === 'lulus' ? 'Lulus passing grade / kuota' : 'Tidak masuk kuota',
+                ]
+            );
+
+            $count++;
+        }
+
+        session()->flash('message', 'Pengumuman berhasil diproses.');
+        $this->dispatch('processed');
+    }
+
     public function render()
     {
         return view('livewire.opsmp.jalur-verified-detail');

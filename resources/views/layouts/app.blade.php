@@ -28,7 +28,10 @@
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/bootstrap-select/css/bootstrap-select.min.css') }}">
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/flatpickr/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/datatables/datatables.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('templates/assets/libs/datatables/datatables.min.css') }}">
     <link rel="stylesheet" href="{{ asset('templates/assets/css/styles.css') }}">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @livewireStyles
     @stack('styles')

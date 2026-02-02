@@ -64,9 +64,21 @@ class RegisterMandiri extends Component
     public $password;
     public $password_confirmation;
 
+    public $scheduleOpen = true;
+    public $scheduleMessage = '';
+    public $scheduleStartDate = null;
+
     public function mount()
     {
-        //
+        $this->scheduleOpen = \App\Models\Jadwal::isOpen('pendaftaran');
+        $this->scheduleMessage = \App\Models\Jadwal::getMessage('pendaftaran');
+
+        if (!$this->scheduleOpen) {
+            $jadwal = \App\Models\Jadwal::where('keyword', 'pendaftaran')->first();
+            if ($jadwal && $jadwal->aktif && now()->lessThan($jadwal->tanggal_mulai)) {
+                $this->scheduleStartDate = $jadwal->tanggal_mulai->toISOString();
+            }
+        }
     }
 
     public function nextStep()
@@ -142,6 +154,11 @@ class RegisterMandiri extends Component
 
     public function register()
     {
+        if (!\App\Models\Jadwal::isOpen('pendaftaran')) {
+            session()->flash('error', \App\Models\Jadwal::getMessage('pendaftaran'));
+            return;
+        }
+
         $this->validateStep(6);
 
         try {

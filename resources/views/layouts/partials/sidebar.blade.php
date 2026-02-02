@@ -30,7 +30,7 @@
     </div>
     <nav class="app-navbar" data-simplebar>
         <ul class="menubar">
-            @if(!auth('siswa')->check())
+            @if(!auth('siswa')->check() && !optional(auth()->user())->isOpsmp())
                 <li class="menu-heading">
                     <span class="menu-label">Menu Utama</span>
                 </li>
@@ -112,6 +112,12 @@
                         <span class="menu-label">Pengaturan Aplikasi</span>
                     </a>
                 </li>
+                <li class="menu-item {{ request()->routeIs('admin.jadwal') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('admin.jadwal') }}">
+                        <i class="fi fi-rr-calendar"></i>
+                        <span class="menu-label">Jadwal SPMB</span>
+                    </a>
+                </li>
 
                 {{-- Manajemen Pengguna --}}
                 <li class="menu-heading">
@@ -151,7 +157,33 @@
 
             @if(auth()->user()->isOpsmp())
                 <li class="menu-heading">
-                    <span class="menu-label">Operator SMP</span>
+                    <span class="menu-label">Main</span>
+                </li>
+                <li class="menu-item {{ request()->routeIs('opsmp.dashboard') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('opsmp.dashboard') }}">
+                        <i class="fi fi-rr-apps"></i>
+                        <span class="menu-label">Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="menu-heading mt-2">
+                    <span class="menu-label">Data Master</span>
+                </li>
+                <li class="menu-item {{ request()->routeIs('opsmp.daya-tampung') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('opsmp.daya-tampung') }}">
+                        <i class="fi fi-rr-chart-pie-alt"></i>
+                        <span class="menu-label">Daya Tampung</span>
+                    </a>
+                </li>
+                <li class="menu-item {{ request()->routeIs('opsmp.pemetaan-domisili') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('opsmp.pemetaan-domisili') }}">
+                        <i class="fi fi-rr-map-marker"></i>
+                        <span class="menu-label">Pemetaan Domisili</span>
+                    </a>
+                </li>
+
+                <li class="menu-heading mt-2">
+                    <span class="menu-label">Penerimaan</span>
                 </li>
                 <li class="menu-item {{ request()->routeIs('opsmp.pendaftaran') ? 'active' : '' }}">
                     <a class="menu-link" href="{{ route('opsmp.pendaftaran') }}">
@@ -162,19 +194,23 @@
                 <li class="menu-item {{ request()->routeIs('opsmp.jalur-verified') ? 'active' : '' }}">
                     <a class="menu-link" href="{{ route('opsmp.jalur-verified') }}">
                         <i class="fi fi-rr-list-check"></i>
-                        <span class="menu-label">List Jalur</span>
+                        <span class="menu-label">Pengolahan Data</span>
                     </a>
                 </li>
-                <li class="menu-item {{ request()->routeIs('opsmp.pemetaan-domisili') ? 'active' : '' }}">
-                    <a class="menu-link" href="{{ route('opsmp.pemetaan-domisili') }}">
-                        <i class="fi fi-rr-map-marker"></i>
-                        <span class="menu-label">Pemetaan Domisili</span>
+
+                <li class="menu-heading mt-2">
+                    <span class="menu-label">Pasca Seleksi</span>
+                </li>
+                <li class="menu-item {{ request()->routeIs('opsmp.pengumuman') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('opsmp.pengumuman') }}">
+                        <i class="fi fi-rr-megaphone"></i>
+                        <span class="menu-label">Data Pengumuman</span>
                     </a>
                 </li>
-                <li class="menu-item {{ request()->routeIs('opsmp.daya-tampung') ? 'active' : '' }}">
-                    <a class="menu-link" href="{{ route('opsmp.daya-tampung') }}">
-                        <i class="fi fi-rr-chart-pie-alt"></i>
-                        <span class="menu-label">Daya Tampung</span>
+                <li class="menu-item {{ request()->routeIs('opsmp.daftar-ulang') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('opsmp.daftar-ulang') }}">
+                        <i class="fi fi-rr-calendar-clock"></i>
+                        <span class="menu-label">Jadwal Daftar Ulang</span>
                     </a>
                 </li>
             @endif
@@ -200,6 +236,12 @@
                             $isRegistered = \App\Models\Pendaftaran::where('peserta_didik_id', auth('siswa')->id())->exists();
                         @endphp
                         <span class="menu-label">{{ $isRegistered ? 'Status Pendaftaran' : 'Daftar SPMB' }}</span>
+                    </a>
+                </li>
+                <li class="menu-item {{ request()->routeIs('siswa.pengumuman') ? 'active' : '' }}">
+                    <a class="menu-link" href="{{ route('siswa.pengumuman') }}">
+                        <i class="fi fi-rr-megaphone"></i>
+                        <span class="menu-label">Pengumuman</span>
                     </a>
                 </li>
             @endif

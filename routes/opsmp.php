@@ -11,3 +11,5 @@ Route::get('/jalur-verified', \App\Livewire\Opsmp\JalurVerified::class)->name('o
 Route::get('/jalur-verified/{id}', \App\Livewire\Opsmp\JalurVerifiedDetail::class)->name('opsmp.jalur-verified.detail');
 Route::get('/pemetaan-domisili', \App\Livewire\Opsmp\PemetaanDomisili::class)->name('opsmp.pemetaan-domisili');
 Route::get('/daya-tampung', \App\Livewire\Opsmp\DayaTampung::class)->name('opsmp.daya-tampung');
+Route::get('/pengumuman', \App\Livewire\Opsmp\ListPengumuman::class)->name('opsmp.pengumuman');
+Route::get('/daftar-ulang', \App\Livewire\Opsmp\DaftarUlang::class)->name('opsmp.daftar-ulang');

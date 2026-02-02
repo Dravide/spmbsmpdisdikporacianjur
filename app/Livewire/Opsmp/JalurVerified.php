@@ -10,7 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('List Jalur Verified')]
+#[Title('Pengolahan Data')]
 class JalurVerified extends Component
 {
     public $jalurList = [];
