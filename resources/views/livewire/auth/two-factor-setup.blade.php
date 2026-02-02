@@ -8,7 +8,7 @@
 
             @if(!$setupComplete)
                 <div class="text-center mb-4">
-                    <div class="bg-light p-3 d-inline-block rounded mb-3">
+                    <div class="bg-white p-3 d-inline-block rounded mb-3 border">
                         {!! $qrCodeSvg !!}
                     </div>
                     <p class="small text-muted mb-2">Scan QR Code ini menggunakan aplikasi Google Authenticator atau Authy.
