@@ -13,6 +13,8 @@ use Livewire\Component;
 #[Title('Pemetaan Domisili')]
 class PemetaanDomisili extends Component
 {
+    use \Livewire\WithFileUploads;
+
     public $sekolah;
     public $zonaList = [];
 
@@ -23,6 +25,10 @@ class PemetaanDomisili extends Component
     public $desa = '';
     public $rw = '';
     public $rt = '';
+
+    // Import
+    public $showImportModal = false;
+    public $importFile;
 
     // API Data
     public $kecamatanList = [];
@@ -151,6 +157,73 @@ class PemetaanDomisili extends Component
             $this->loadZonaList();
         }
     }
+
+    // Import Logic
+    public function openImportModal()
+    {
+        $this->showImportModal = true;
+        $this->importFile = null;
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="template_import_zona.csv"',
+        ];
+
+        $callback = function () {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Kecamatan', 'Desa', 'RW', 'RT']);
+            fputcsv($file, ['Cianjur', 'Pamoyanan', '01', '02']); // Example
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function importData()
+    {
+        $this->validate([
+            'importFile' => 'required|file|mimes:csv,txt|max:1024',
+        ]);
+
+        $path = $this->importFile->getRealPath();
+        $file = fopen($path, 'r');
+        $header = fgetcsv($file); // Skip header
+
+        $count = 0;
+        while (($row = fgetcsv($file)) !== false) {
+            // Expecting: Kecamatan, Desa, RW, RT
+            if (count($row) >= 4) {
+                // Check if exists to avoid duplicates
+                $exists = ZonaDomisili::where('sekolah_id', $this->sekolah->sekolah_id)
+                    ->where('kecamatan', $row[0])
+                    ->where('desa', $row[1])
+                    ->where('rw', $row[2])
+                    ->where('rt', $row[3])
+                    ->exists();
+
+                if (!$exists) {
+                    ZonaDomisili::create([
+                        'sekolah_id' => $this->sekolah->sekolah_id,
+                        'kecamatan' => trim($row[0]),
+                        'desa' => trim($row[1]),
+                        'rw' => trim($row[2]),
+                        'rt' => trim($row[3]),
+                    ]);
+                    $count++;
+                }
+            }
+        }
+        fclose($file);
+
+        $this->showImportModal = false;
+        $this->importFile = null;
+        $this->loadZonaList();
+        session()->flash('message', "Berhasil mengimpor {$count} data zona baru.");
+    }
+
 
     public function resetForm()
     {

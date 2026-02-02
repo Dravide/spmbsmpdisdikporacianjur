@@ -4,9 +4,14 @@
             <h4 class="mb-1">Pemetaan Domisili</h4>
             <p class="text-muted mb-0">Kelola zona domisili untuk jalur pendaftaran domisili sekolah Anda.</p>
         </div>
-        <button class="btn btn-primary" wire:click="createZona">
-            <i class="fi fi-rr-add me-1"></i> Tambah Zona
-        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-success" wire:click="openImportModal">
+                <i class="fi fi-rr-file-import me-1"></i> Import CSV
+            </button>
+            <button class="btn btn-primary" wire:click="createZona">
+                <i class="fi fi-rr-add me-1"></i> Tambah Zona
+            </button>
+        </div>
     </div>
 
     @if (session()->has('message'))
@@ -60,9 +65,14 @@
                     </div>
                     <h5>Belum ada zona domisili</h5>
                     <p class="mb-3">Tambahkan wilayah yang masuk dalam zonasi sekolah Anda.</p>
-                    <button class="btn btn-primary btn-sm" wire:click="createZona">
-                        <i class="fi fi-rr-plus me-1"></i> Tambah Zona Pertama
-                    </button>
+                    <div class="d-flex justify-content-center gap-2">
+                         <button class="btn btn-outline-success btn-sm" wire:click="openImportModal">
+                            <i class="fi fi-rr-file-import me-1"></i> Import CSV
+                        </button>
+                        <button class="btn btn-primary btn-sm" wire:click="createZona">
+                            <i class="fi fi-rr-plus me-1"></i> Tambah Zona Pertama
+                        </button>
+                    </div>
                 </div>
             @endif
         </div>
@@ -120,6 +130,53 @@
                             <button type="button" class="btn btn-light"
                                 wire:click="$set('showFormModal', false)">Batal</button>
                             <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Import Modal -->
+    @if($showImportModal)
+        <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Import Data Zona (CSV)</h5>
+                        <button type="button" class="btn-close" wire:click="$set('showImportModal', false)"></button>
+                    </div>
+                    <form wire:submit.prevent="importData">
+                        <div class="modal-body">
+                            <div class="mb-4 text-center">
+                                <div class="mb-2">
+                                    <i class="fi fi-rr-file-csv fs-1 text-success"></i>
+                                </div>
+                                <p class="mb-2">Gunakan format file CSV untuk import data massal.</p>
+                                <button type="button" class="btn btn-link btn-sm" wire:click="downloadTemplate">
+                                    <i class="fi fi-rr-download me-1"></i> Download Template CSV
+                                </button>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Upload File CSV</label>
+                                <input type="file" class="form-control @error('importFile') is-invalid @enderror" 
+                                    wire:model="importFile" accept=".csv">
+                                @error('importFile') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <div class="form-text text-muted">Kolom: Kecamatan, Desa, RW, RT (Pemisah Koma)</div>
+                            </div>
+                            
+                            <div wire:loading wire:target="importFile, importData">
+                                <div class="d-flex align-items-center text-primary">
+                                    <div class="spinner-border spinner-border-sm me-2"></div>
+                                    <small>Memproses data...</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light"
+                                wire:click="$set('showImportModal', false)">Batal</button>
+                            <button type="submit" class="btn btn-success" wire:loading.attr="disabled">Import Data</button>
                         </div>
                     </form>
                 </div>
