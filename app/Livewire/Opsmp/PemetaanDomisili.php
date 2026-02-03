@@ -159,69 +159,188 @@ class PemetaanDomisili extends Component
     }
 
     // Import Logic
-    public function openImportModal()
-    {
-        $this->showImportModal = true;
-        $this->importFile = null;
-    }
+    public $previewData = [];
+    public $importErrors = [];
+    public $canImport = false;
+    public $isImporting = false;
 
     public function downloadTemplate()
     {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="template_import_zona.csv"',
-        ];
+        return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithTitle {
+            public function headings(): array
+            {
+                return ['Kecamatan', 'Desa', 'RW', 'RT'];
+            }
 
-        $callback = function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['Kecamatan', 'Desa', 'RW', 'RT']);
-            fputcsv($file, ['Cianjur', 'Pamoyanan', '01', '02']); // Example
-            fclose($file);
-        };
+            public function array(): array
+            {
+                return [
+                    ['Cianjur', 'Pamoyanan', '01', '01'],
+                    ['Cianjur', 'Bojongherang', '02', '03'],
+                ];
+            }
 
-        return response()->stream($callback, 200, $headers);
+            public function title(): string
+            {
+                return 'Template Zona';
+            }
+        }, 'template_zona_domisili.xlsx');
     }
 
-    public function importData()
+    public function openImportModal()
+    {
+        $this->reset(['importFile', 'previewData', 'importErrors', 'canImport']);
+        $this->showImportModal = true;
+    }
+
+    public function updatedImportFile()
     {
         $this->validate([
-            'importFile' => 'required|file|mimes:csv,txt|max:1024',
+            'importFile' => 'required|max:5120|mimes:xlsx,xls',
         ]);
 
-        $path = $this->importFile->getRealPath();
-        $file = fopen($path, 'r');
-        $header = fgetcsv($file); // Skip header
+        $this->processImportPreview();
+    }
 
-        $count = 0;
-        while (($row = fgetcsv($file)) !== false) {
-            // Expecting: Kecamatan, Desa, RW, RT
-            if (count($row) >= 4) {
-                // Check if exists to avoid duplicates
-                $exists = ZonaDomisili::where('sekolah_id', $this->sekolah->sekolah_id)
-                    ->where('kecamatan', $row[0])
-                    ->where('desa', $row[1])
-                    ->where('rw', $row[2])
-                    ->where('rt', $row[3])
-                    ->exists();
+    public function processImportPreview()
+    {
+        try {
+            // Define anonymous class for Import
+            $import = new class implements \Maatwebsite\Excel\Concerns\ToArray, \Maatwebsite\Excel\Concerns\WithHeadingRow {
+                public function array(array $array)
+                {
+                }
+            };
 
-                if (!$exists) {
-                    ZonaDomisili::create([
-                        'sekolah_id' => $this->sekolah->sekolah_id,
-                        'kecamatan' => trim($row[0]),
-                        'desa' => trim($row[1]),
-                        'rw' => trim($row[2]),
-                        'rt' => trim($row[3]),
-                    ]);
-                    $count++;
+            $data = \Maatwebsite\Excel\Facades\Excel::toArray($import, $this->importFile);
+            $rows = $data[0] ?? []; // Get first sheet
+
+        } catch (\Exception $e) {
+            $this->addError('importFile', 'Gagal membaca file Excel: ' . $e->getMessage());
+            return;
+        }
+
+        $processedRows = [];
+        $validCount = 0;
+
+        // Cianjur City Code: 3203 (Laravolt format often without dots)
+        // Try both formats to be safe or stick to what we found (3203)
+        $districts = \Laravolt\Indonesia\Models\District::where('city_code', '3203')->get();
+        if ($districts->isEmpty()) {
+            // Fallback to dotted format just in case
+            $districts = \Laravolt\Indonesia\Models\District::where('city_code', '32.03')->get();
+        }
+
+        foreach ($rows as $row) {
+            $kecamatanInput = trim($row['kecamatan'] ?? '');
+            $desaInput = trim($row['desa'] ?? ($row['desakelurahan'] ?? '')); // Try 'desa' or 'desakelurahan'
+            $rwInput = trim($row['rw'] ?? '');
+            $rtInput = trim($row['rt'] ?? '');
+
+            // Skip empty rows
+            if (empty($kecamatanInput) && empty($desaInput))
+                continue;
+
+            $status = 'Valid';
+            $errorMsg = '';
+
+            // Normalize Input: Remove 'Kecamatan' prefix if present
+            $kecamatanName = preg_replace('/^kecamatan\s+/i', '', $kecamatanInput);
+
+            // Normalize Input: Remove 'Desa'/'Kelurahan' prefix if present
+            $desaName = preg_replace('/^(desa|kelurahan)\s+/i', '', $desaInput);
+
+
+            // Validation
+            if (empty($kecamatanInput) || empty($desaInput)) {
+                $status = 'Invalid';
+                $errorMsg = 'Kecamatan/Desa kosong';
+            } else {
+                // Check DB
+                // 1. Check Kecamatan in Cianjur
+                $district = $districts->first(function ($d) use ($kecamatanName) {
+                    return strcasecmp($d->name, $kecamatanName) === 0;
+                });
+
+                if (!$district) {
+                    $status = 'Invalid';
+                    $errorMsg = 'Kecamatan tidak ditemukan di Cianjur';
+                } else {
+                    // 2. Check Desa in District
+                    // Try precise match first, then case-insensitive collection search
+                    $village = \Laravolt\Indonesia\Models\Village::where('district_code', $district->code)
+                        ->where('name', 'like', $desaName)
+                        ->first();
+
+                    if (!$village) {
+                        $allVillages = \Laravolt\Indonesia\Models\Village::where('district_code', $district->code)->get();
+                        $village = $allVillages->first(function ($v) use ($desaName) {
+                            return strcasecmp($v->name, $desaName) === 0;
+                        });
+                    }
+
+
+                    if (!$village) {
+                        $status = 'Invalid';
+                        $errorMsg = 'Desa tidak ditemukan di Kecamatan ' . $kecamatanInput;
+                    }
                 }
             }
-        }
-        fclose($file);
 
+            if ($status === 'Valid')
+                $validCount++;
+
+            $processedRows[] = [
+                'kecamatan' => $kecamatanInput,
+                'desa' => $desaInput,
+                'rw' => $rwInput,
+                'rt' => $rtInput,
+                'status' => $status,
+                'error' => $errorMsg
+            ];
+
+            if (count($processedRows) > 100)
+                break; // Limit preview
+        }
+
+        $this->previewData = $processedRows;
+        $this->canImport = ($validCount > 0);
+    }
+
+    public function saveImport()
+    {
+        if (!$this->canImport || empty($this->previewData))
+            return;
+
+        $this->isImporting = true;
+        $count = 0;
+
+        foreach ($this->previewData as $row) {
+            if ($row['status'] === 'Valid') {
+                ZonaDomisili::updateOrCreate(
+                    [
+                        'sekolah_id' => $this->sekolah->sekolah_id,
+                        'kecamatan' => $row['kecamatan'],
+                        'desa' => $row['desa'],
+                        'rw' => $row['rw'],
+                        'rt' => $row['rt'],
+                    ],
+                    [] // No other fields to update
+                );
+                $count++;
+            }
+        }
+
+        $this->isImporting = false;
         $this->showImportModal = false;
-        $this->importFile = null;
         $this->loadZonaList();
-        session()->flash('message', "Berhasil mengimpor {$count} data zona baru.");
+        session()->flash('message', "Import berhasil! {$count} zona ditambahkan.");
+    }
+
+    public function closeImport()
+    {
+        $this->showImportModal = false;
+        $this->reset(['importFile', 'previewData', 'canImport']);
     }
 
 

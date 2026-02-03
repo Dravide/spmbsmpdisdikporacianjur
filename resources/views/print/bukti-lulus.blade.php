@@ -238,10 +238,28 @@
     </div>
 
     <div class="content-body">
-        <p>
-            Harap segera melakukan <strong>DAFTAR ULANG</strong> ke sekolah tujuan dengan membawa bukti kelulusan ini
-            dan dokumen persyaratan asli lainnya sesuai dengan jadwal yang telah ditentukan.
+        <p>Harap segera melakukan <strong>DAFTAR ULANG</strong> ke sekolah tujuan dengan membawa bukti kelulusan ini
+            dan dokumen persyaratan asli lainnya sesuai dengan jadwal yang telah ditentukan:
         </p>
+        @if($pengumuman->daftarUlang)
+            <div style="text-align: center; margin: 15px 0;">
+                <div style="font-weight: 700; font-size: 14px; color: #1e40af;">
+                    JADWAL DAFTAR ULANG:
+                </div>
+                <div style="font-size: 12px; margin-top: 5px;">
+                    Hari/Tanggal: {{ $pengumuman->daftarUlang->tanggal->translatedFormat('l, d F Y') }}
+                </div>
+                <div style="font-size: 11px; margin-top: 2px;">
+                    Pukul {{ $pengumuman->daftarUlang->waktu_mulai->format('H:i') }} -
+                    {{ $pengumuman->daftarUlang->waktu_selesai->format('H:i') }} WIB
+                </div>
+                @if($pengumuman->daftarUlang->lokasi)
+                    <div style="font-size: 11px; margin-top: 2px;">
+                        Tempat: {{ $pengumuman->daftarUlang->lokasi }}
+                    </div>
+                @endif
+            </div>
+        @endif
         <p>
             <em>Catatan: Kelulusan dapat dibatalkan apabila dikemudian hari ditemukan ketidaksesuaian data atau dokumen
                 yang dipalsukan.</em>

@@ -179,8 +179,12 @@
                                 </h6>
                                 <table class="table table-sm table-borderless mb-0">
                                     <tr>
-                                        <td class="text-muted" width="40%">Sekolah Tujuan</td>
+                                        <td class="text-muted" width="40%">Sekolah Tujuan 1</td>
                                         <td class="fw-bold">{{ $registrationData->sekolah->nama ?? '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Sekolah Tujuan 2</td>
+                                        <td class="fw-bold">{{ $registrationData->sekolah2->nama ?? '-' }}</td>
                                     </tr>
                                     <tr>
                                         <td class="text-muted">Jalur</td>
@@ -582,54 +586,107 @@
             @if ($step == 2)
                 <h5 class="mb-3">Langkah 2: Pilih Sekolah Tujuan</h5>
                 
-                <div class="mb-3">
-                    <input type="text" class="form-control form-control-lg" placeholder="Cari nama sekolah SMP..." wire:model.live.debounce.300ms="searchSekolah">
-                </div>
+                <div class="row g-4">
+                    <!-- Sekolah Tujuan 1 (Full Online) -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-primary mb-3 icon-link">
+                                    <i class="fi fi-rr-globe"></i> Sekolah Tujuan 1 (Full Online)
+                                </h6>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" placeholder="Cari nama sekolah Full Online..." wire:model.live.debounce.300ms="searchSekolah">
+                                </div>
 
-                @if($selectedSekolahId)
-                    <div class="alert alert-success d-flex align-items-center">
-                        <i class="fi fi-rr-check-circle fs-4 me-3"></i>
-                        <div>
-                            <strong>Sekolah Terpilih:</strong>
-                            <div class="fs-5">{{ $selectedSekolahName }}</div>
+                                @if($selectedSekolahId)
+                                    <div class="alert alert-success d-flex align-items-center py-2 px-3 mb-3">
+                                        <i class="fi fi-rr-check-circle fs-5 me-2"></i>
+                                        <div>
+                                            <strong>Terpilih:</strong> 
+                                            <div class="fw-semibold small">{{ $selectedSekolahName }}</div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="list-group overflow-auto" style="max-height: 400px;">
+                                    @forelse ($sekolahList as $sekolah)
+                                        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ $selectedSekolahId == $sekolah->sekolah_id ? 'active' : '' }}"
+                                            wire:click="selectSekolah('{{ $sekolah->sekolah_id }}', '{{ $sekolah->nama }}', {{ $sekolah->lintang ?? 0 }}, {{ $sekolah->bujur ?? 0 }})">
+                                            <div class="text-start">
+                                                <h6 class="mb-1 small fw-bold">{{ $sekolah->nama }}</h6>
+                                                <small class="text-muted {{ $selectedSekolahId == $sekolah->sekolah_id ? 'text-white-50' : '' }}" style="font-size: 0.75rem;">
+                                                    {{ $sekolah->desa_kelurahan ?? 'Alamat tidak tersedia' }}
+                                                </small>
+                                            </div>
+                                            @if($selectedSekolahId == $sekolah->sekolah_id)
+                                                <i class="fi fi-rr-check ms-2"></i>
+                                            @endif
+                                        </button>
+                                    @empty
+                                        <div class="text-center py-3 text-muted border rounded bg-white small">
+                                            @if($searchSekolah)
+                                                Tidak ada cocok.
+                                            @else
+                                                Ketik nama sekolah.
+                                            @endif
+                                        </div>
+                                    @endforelse
+                                </div>
+                                @error('selectedSekolahId') <div class="text-danger mt-1 small">{{ $message }}</div> @enderror
+                            </div>
                         </div>
                     </div>
-                @endif
 
-                <div class="list-group">
-                    @forelse ($sekolahList as $sekolah)
-                        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ $selectedSekolahId == $sekolah->sekolah_id ? 'active' : '' }}"
-                            wire:click="selectSekolah('{{ $sekolah->sekolah_id }}', '{{ $sekolah->nama }}', {{ $sekolah->lintang ?? 0 }}, {{ $sekolah->bujur ?? 0 }})">
-                            <div>
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <h6 class="mb-0">{{ $sekolah->nama }}</h6>
-                                    @if($sekolah->mode_spmb == 'Full Online')
-                                        <span class="badge bg-success-subtle text-success" style="font-size: 0.7rem;">
-                                            <i class="fi fi-rr-globe me-1"></i>Full Online
-                                        </span>
-                                    @else
-                                        <span class="badge bg-warning-subtle text-warning" style="font-size: 0.7rem;">
-                                            <i class="fi fi-rr-school me-1"></i>Semi Online
-                                        </span>
-                                    @endif
+                    <!-- Sekolah Tujuan 2 (Semi Online) -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-warning mb-3 icon-link">
+                                    <i class="fi fi-rr-school"></i> Sekolah Tujuan 2 (Semi Online)
+                                </h6>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" placeholder="Cari nama sekolah Semi Online..." wire:model.live.debounce.300ms="searchSekolah2">
                                 </div>
-                                <small class="text-muted {{ $selectedSekolahId == $sekolah->sekolah_id ? 'text-white-50' : '' }}">{{ $sekolah->desa_kelurahan ?? 'Alamat tidak tersedia' }}</small>
+
+                                @if($selectedSekolahId2)
+                                     <div class="alert alert-success d-flex align-items-center py-2 px-3 mb-3">
+                                        <i class="fi fi-rr-check-circle fs-5 me-2"></i>
+                                        <div>
+                                            <strong>Terpilih:</strong> 
+                                            <div class="fw-semibold small">{{ $selectedSekolahName2 }}</div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="list-group overflow-auto" style="max-height: 400px;">
+                                    @forelse ($sekolahList2 as $sekolah)
+                                        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ $selectedSekolahId2 == $sekolah->sekolah_id ? 'active' : '' }}"
+                                            wire:click="selectSekolah2('{{ $sekolah->sekolah_id }}', '{{ $sekolah->nama }}')">
+                                            <div class="text-start">
+                                                <h6 class="mb-1 small fw-bold">{{ $sekolah->nama }}</h6>
+                                                <small class="text-muted {{ $selectedSekolahId2 == $sekolah->sekolah_id ? 'text-white-50' : '' }}" style="font-size: 0.75rem;">
+                                                    {{ $sekolah->desa_kelurahan ?? 'Alamat tidak tersedia' }}
+                                                </small>
+                                            </div>
+                                            @if($selectedSekolahId2 == $sekolah->sekolah_id)
+                                                <i class="fi fi-rr-check ms-2"></i>
+                                            @endif
+                                        </button>
+                                    @empty
+                                         <div class="text-center py-3 text-muted border rounded bg-white small">
+                                            @if($searchSekolah2)
+                                                Tidak ada cocok.
+                                            @else
+                                                Ketik nama sekolah.
+                                            @endif
+                                        </div>
+                                    @endforelse
+                                </div>
+                                @error('selectedSekolahId2') <div class="text-danger mt-1 small">{{ $message }}</div> @enderror
                             </div>
-                            @if($selectedSekolahId == $sekolah->sekolah_id)
-                                <i class="fi fi-rr-check"></i>
-                            @endif
-                        </button>
-                    @empty
-                        <div class="text-center py-4 text-muted">
-                            @if($searchSekolah)
-                                Tidak ada sekolah yang cocok dengan pencarian.
-                            @else
-                                Ketik nama sekolah untuk mencari.
-                            @endif
                         </div>
-                    @endforelse
+                    </div>
                 </div>
-                @error('selectedSekolahId') <div class="text-danger mt-2">{{ $message }}</div> @enderror
             @endif
 
             <!-- Step 3: Lokasi -->
@@ -857,8 +914,12 @@
                             <div class="accordion-body">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <small class="text-muted d-block uppercase">Sekolah Tujuan</small>
+                                        <small class="text-muted d-block uppercase">Sekolah Tujuan 1 (Full Online)</small>
                                         <div class="fw-bold fs-5 text-primary">{{ $selectedSekolah->nama ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block uppercase">Sekolah Tujuan 2 (Semi Online)</small>
+                                        <div class="fw-bold fs-5 text-warning">{{ $selectedSekolah2->nama ?? '-' }}</div>
                                     </div>
                                     <div class="col-md-6">
                                         <small class="text-muted d-block uppercase">Jalur Pendaftaran</small>

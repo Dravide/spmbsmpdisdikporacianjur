@@ -101,10 +101,25 @@ class DataPendaftaran extends Component
             $pendaftaran->catatan = $this->catatan;
             $pendaftaran->save();
 
+            // Reset status berkas jika kembali ke draft atau submitted
+            if (in_array($this->newStatus, ['draft', 'submitted'])) {
+                $pendaftaran->berkas()->update(['status_berkas' => 'pending']);
+            }
+
             session()->flash('message', 'Status pendaftaran berhasil diperbarui.');
         }
 
         $this->closeStatusModal();
+    }
+
+    public function delete($id)
+    {
+        $pendaftaran = Pendaftaran::find($id);
+
+        if ($pendaftaran) {
+            $pendaftaran->delete();
+            session()->flash('message', 'Data pendaftaran berhasil dihapus.');
+        }
     }
 
     public function render()

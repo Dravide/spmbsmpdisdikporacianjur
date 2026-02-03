@@ -36,4 +36,9 @@ class Pengumuman extends Model
     {
         return $this->belongsTo(PesertaDidik::class);
     }
+
+    public function daftarUlang()
+    {
+        return $this->hasOne(DaftarUlang::class);
+    }
 }

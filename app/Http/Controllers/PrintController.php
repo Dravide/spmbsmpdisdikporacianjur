@@ -87,7 +87,7 @@ class PrintController extends Controller
 
     public function cetakBukti($id)
     {
-        $pendaftaran = \App\Models\Pendaftaran::with(['pesertaDidik', 'sekolah', 'berkas.berkas', 'jalur'])->findOrFail($id);
+        $pendaftaran = \App\Models\Pendaftaran::with(['pesertaDidik', 'sekolah', 'sekolah2', 'berkas.berkas', 'jalur'])->findOrFail($id);
 
         // Authorization
         if (auth()->guard('siswa')->check()) {
@@ -157,6 +157,9 @@ class PrintController extends Controller
             abort(403, 'Maaf, Anda tidak memiliki akses untuk mencetak bukti kelulusan.');
         }
 
+        // Eager load info daftar ulang
+        $pengumuman->load('daftarUlang');
+
         // Authorization
         if (auth()->guard('siswa')->check()) {
             if ($pendaftaran->peserta_didik_id != auth()->guard('siswa')->id()) {
@@ -181,12 +184,16 @@ class PrintController extends Controller
 
         $qrCodeBase64 = base64_encode($qrCode);
 
+        // Fetch Schedule for Daftar Ulang
+        $jadwalDaftarUlang = \App\Models\Jadwal::where('keyword', 'daftar-ulang')->first();
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.bukti-lulus', [
             'pendaftaran' => $pendaftaran,
             'siswa' => $siswa,
             'sekolah' => $sekolah,
             'pengumuman' => $pengumuman,
-            'qrCode' => $qrCodeBase64
+            'qrCode' => $qrCodeBase64,
+            'jadwalDaftarUlang' => $jadwalDaftarUlang
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream('bukti-lulus-' . $pendaftaran->nomor_pendaftaran . '.pdf');

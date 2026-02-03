@@ -23,5 +23,6 @@ Route::get('/berkas/{id}/fields', \App\Livewire\Admin\DataBerkasField::class)->n
 Route::get('/jalur', \App\Livewire\Admin\DataJalur::class)->name('admin.jalur');
 Route::get('/pendaftaran', \App\Livewire\Admin\DataPendaftaran::class)->name('admin.pendaftaran');
 Route::get('/pemetaan-domisili', \App\Livewire\Admin\PemetaanDomisili::class)->name('admin.pemetaan-domisili');
+Route::get('/eligible-siswa-domisili', \App\Livewire\Admin\EligibleSiswaDomisili::class)->name('admin.eligible-siswa-domisili');
 Route::get('/daya-tampung', \App\Livewire\Admin\DataDayaTampung::class)->name('admin.daya-tampung');
 Route::get('/data-admin', \App\Livewire\Admin\DataAdmin::class)->name('admin.data-admin');

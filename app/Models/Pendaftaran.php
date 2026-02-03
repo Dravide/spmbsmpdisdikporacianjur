@@ -15,6 +15,7 @@ class Pendaftaran extends Model
     protected $fillable = [
         'peserta_didik_id',
         'sekolah_menengah_pertama_id',
+        'sekolah_menengah_pertama_id_2',
         'jalur_pendaftaran_id',
         'tanggal_daftar',
         'koordinat_lintang',
@@ -40,6 +41,11 @@ class Pendaftaran extends Model
     public function sekolah()
     {
         return $this->belongsTo(SekolahMenengahPertama::class, 'sekolah_menengah_pertama_id', 'sekolah_id');
+    }
+
+    public function sekolah2()
+    {
+        return $this->belongsTo(SekolahMenengahPertama::class, 'sekolah_menengah_pertama_id_2', 'sekolah_id');
     }
 
     public function jalur()

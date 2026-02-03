@@ -104,14 +104,35 @@
                                 </td>
                                 <td>{{ $pendaftaran->tanggal_daftar?->locale('id')->translatedFormat('d F Y') ?? '-' }}</td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-primary"
-                                        wire:click="showDetail('{{ $pendaftaran->id }}')">
-                                        <i class="fi fi-rr-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary"
-                                        wire:click="openStatusModal('{{ $pendaftaran->id }}')">
-                                        <i class="fi fi-rr-edit"></i>
-                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light border dropdown-toggle" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            Aksi
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <button class="dropdown-item"
+                                                    wire:click="showDetail('{{ $pendaftaran->id }}')">
+                                                    <i class="fi fi-rr-eye me-2"></i> Detail
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item"
+                                                    wire:click="openStatusModal('{{ $pendaftaran->id }}')">
+                                                    <i class="fi fi-rr-edit me-2"></i> Ubah Status
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger"
+                                                    onclick="confirmDelete('{{ $pendaftaran->id }}')">
+                                                    <i class="fi fi-rr-trash me-2"></i> Hapus
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -185,8 +206,12 @@
                                         <td class="fw-bold">{{ $selectedPendaftaran->nomor_pendaftaran ?? '-' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="text-muted">Sekolah Tujuan</td>
+                                        <td class="text-muted">Sekolah Tujuan 1</td>
                                         <td class="fw-bold">{{ $selectedPendaftaran->sekolah->nama ?? '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Sekolah Tujuan 2</td>
+                                        <td class="fw-bold">{{ $selectedPendaftaran->sekolah2->nama ?? '-' }}</td>
                                     </tr>
                                     <tr>
                                         <td class="text-muted">Jalur</td>
@@ -214,7 +239,8 @@
                                     <tr>
                                         <td class="text-muted">Tanggal Daftar</td>
                                         <td class="fw-bold">
-                                            {{ $selectedPendaftaran->tanggal_daftar?->locale('id')->translatedFormat('d F Y') ?? '-' }}</td>
+                                            {{ $selectedPendaftaran->tanggal_daftar?->locale('id')->translatedFormat('d F Y') ?? '-' }}
+                                        </td>
                                     </tr>
                                 </table>
                             </div>
@@ -300,3 +326,24 @@
         </div>
     @endif
 </div>
+
+@push('scripts')
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data pendaftaran ini akan dihapus permanen.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    @this.delete(id);
+                }
+            });
+        }
+    </script>
+@endpush

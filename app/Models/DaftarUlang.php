@@ -22,6 +22,12 @@ class DaftarUlang extends Model
         'nomor_urut',
     ];
 
+    protected $casts = [
+        'tanggal' => 'date',
+        'waktu_mulai' => 'datetime',
+        'waktu_selesai' => 'datetime',
+    ];
+
     public function sekolah()
     {
         return $this->belongsTo(SekolahMenengahPertama::class, 'sekolah_menengah_pertama_id', 'sekolah_id');

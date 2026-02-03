@@ -232,6 +232,101 @@ class DaftarUlang extends Component
         }
     }
 
+    public function downloadDaftarHadir()
+    {
+        $user = Auth::user();
+        if (!$user)
+            return;
+
+        $query = DaftarUlangModel::with(['pesertaDidik.sekolah', 'pengumuman.jalur', 'pengumuman.pendaftaran'])
+            ->where('sekolah_menengah_pertama_id', $user->sekolah_id);
+
+        if ($this->search) {
+            $query->whereHas('pesertaDidik', function ($q) {
+                $q->where('nama', 'like', '%' . $this->search . '%')
+                    ->orWhere('nisn', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        if ($this->filterStatus) {
+            $query->where('status', $this->filterStatus);
+        }
+
+        if ($this->dateStart) {
+            $query->whereDate('tanggal', '>=', $this->dateStart);
+        }
+
+        if ($this->dateEnd) {
+            $query->whereDate('tanggal', '<=', $this->dateEnd);
+        }
+
+        $items = $query->orderBy('tanggal', 'asc')
+            ->orderBy('waktu_mulai', 'asc')
+            ->orderBy('nomor_urut', 'asc')
+            ->get();
+
+        if ($items->isEmpty()) {
+            $this->dispatch('swal:modal', [
+                'type' => 'warning',
+                'title' => 'Data Kosong',
+                'text' => 'Tidak ada data untuk dicetak sesuai filter yang dipilih.'
+            ]);
+            return;
+        }
+
+        // Setup QR Code Renderer
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(120),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+
+        $groupedData = $items->groupBy(function ($item) {
+            return $item->tanggal;
+        })->map(function ($dateGroup) {
+            return $dateGroup->groupBy(function ($item) {
+                return $item->waktu_mulai . ' - ' . $item->waktu_selesai;
+            });
+        });
+
+        $finalData = [];
+        foreach ($groupedData as $date => $timeGroups) {
+            foreach ($timeGroups as $timeRange => $timeItems) {
+                $sessionData = [];
+                foreach ($timeItems as $item) {
+                    $nomorPeserta = $item->pengumuman->pendaftaran->nomor_pendaftaran ?? $item->pesertaDidik->nisn;
+
+                    // Generate QR Code
+                    $qrContent = $nomorPeserta;
+                    $qrCode = $writer->writeString($qrContent);
+                    $qrCodeBase64 = base64_encode($qrCode);
+
+                    $sessionData[] = [
+                        'nomor_peserta' => $nomorPeserta,
+                        'nama' => $item->pesertaDidik->nama,
+                        'asal_sekolah' => $item->pesertaDidik->sekolah->nama ?? 'Umum',
+                        'jalur' => $item->pengumuman->jalur->nama ?? '-',
+                        'qr_code' => $qrCodeBase64
+                    ];
+                }
+                $finalData[$date][$timeRange] = $sessionData;
+            }
+        }
+
+        $sekolah = $user->sekolah;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.daftar-hadir-daftar-ulang', [
+            'groupedData' => $finalData,
+            'sekolah' => $sekolah,
+            'filterDateStart' => $this->dateStart,
+            'filterDateEnd' => $this->dateEnd,
+        ])->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, 'daftar-hadir-' . date('Y-m-d') . '.pdf');
+    }
+
     public function render()
     {
         $user = Auth::user();

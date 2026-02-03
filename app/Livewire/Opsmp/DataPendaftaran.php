@@ -17,20 +17,30 @@ class DataPendaftaran extends Component
 
     public $search = '';
     public $filterStatus = '';
+    public $filterJalur = '';
+    public $filterSekolah = ''; // New Filter
+    public $startDate = '';
+    public $endDate = '';
 
     // Detail Modal
     public $showDetailModal = false;
     public $selectedPendaftaran = null;
 
-    protected $queryString = ['search', 'filterStatus'];
+    protected $queryString = ['search', 'filterStatus', 'filterJalur', 'filterSekolah', 'startDate', 'endDate'];
 
-    public function updatingSearch()
+    public function updatedSearch()
     {
         $this->resetPage();
     }
 
-    public function updatingFilterStatus()
+    public function applyFilters()
     {
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['filterStatus', 'filterJalur', 'filterSekolah', 'startDate', 'endDate', 'search']);
         $this->resetPage();
     }
 
@@ -57,6 +67,14 @@ class DataPendaftaran extends Component
         // sekolah_id stores the SMP school ID for OPSMP users
         $sekolahId = $user->sekolah_id;
 
+        $jalurList = \App\Models\JalurPendaftaran::all();
+
+        // Get list of Sekolah Dasar present in current applications to this school (optimized)
+        $sekolahDasarList = \App\Models\SekolahDasar::whereHas('pesertaDidik.pendaftaran', function ($q) use ($sekolahId) {
+            $q->where('sekolah_menengah_pertama_id', $sekolahId);
+        })->orderBy('nama')->get();
+
+
         $pendaftarans = Pendaftaran::query()
             ->with(['pesertaDidik.sekolah', 'sekolah', 'jalur'])
             ->where('sekolah_menengah_pertama_id', $sekolahId)
@@ -69,11 +87,27 @@ class DataPendaftaran extends Component
             ->when($this->filterStatus, function ($query) {
                 $query->where('status', $this->filterStatus);
             })
+            ->when($this->filterJalur, function ($query) {
+                $query->where('jalur_pendaftaran_id', $this->filterJalur);
+            })
+            ->when($this->filterSekolah, function ($query) {
+                $query->whereHas('pesertaDidik', function ($q) {
+                    $q->where('sekolah_id', $this->filterSekolah);
+                });
+            })
+            ->when($this->startDate, function ($query) {
+                $query->whereDate('tanggal_daftar', '>=', $this->startDate);
+            })
+            ->when($this->endDate, function ($query) {
+                $query->whereDate('tanggal_daftar', '<=', $this->endDate);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         return view('livewire.opsmp.data-pendaftaran', [
             'pendaftarans' => $pendaftarans,
+            'jalurList' => $jalurList,
+            'sekolahDasarList' => $sekolahDasarList,
         ]);
     }
 }

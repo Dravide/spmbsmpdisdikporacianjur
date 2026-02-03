@@ -6,7 +6,7 @@
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-outline-success" wire:click="openImportModal">
-                <i class="fi fi-rr-file-import me-1"></i> Import CSV
+                <i class="fi fi-rr-file-import me-1"></i> Import Excel
             </button>
             <button class="btn btn-primary" wire:click="createZona">
                 <i class="fi fi-rr-add me-1"></i> Tambah Zona
@@ -67,7 +67,7 @@
                     <p class="mb-3">Tambahkan wilayah yang masuk dalam zonasi sekolah Anda.</p>
                     <div class="d-flex justify-content-center gap-2">
                          <button class="btn btn-outline-success btn-sm" wire:click="openImportModal">
-                            <i class="fi fi-rr-file-import me-1"></i> Import CSV
+                            <i class="fi fi-rr-file-import me-1"></i> Import Excel
                         </button>
                         <button class="btn btn-primary btn-sm" wire:click="createZona">
                             <i class="fi fi-rr-plus me-1"></i> Tambah Zona Pertama
@@ -139,46 +139,91 @@
 
     <!-- Import Modal -->
     @if($showImportModal)
-        <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
+        <div class="modal fade show d-block" style="background: rgba(0,0,0,0.7); overflow-y: auto;" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Import Data Zona (CSV)</h5>
-                        <button type="button" class="btn-close" wire:click="$set('showImportModal', false)"></button>
+                        <h5 class="modal-title">Import Zona Domisili (Excel)</h5>
+                        <button type="button" class="btn-close" wire:click="closeImport"></button>
                     </div>
-                    <form wire:submit.prevent="importData">
-                        <div class="modal-body">
-                            <div class="mb-4 text-center">
-                                <div class="mb-2">
-                                    <i class="fi fi-rr-file-csv fs-1 text-success"></i>
-                                </div>
-                                <p class="mb-2">Gunakan format file CSV untuk import data massal.</p>
-                                <button type="button" class="btn btn-link btn-sm" wire:click="downloadTemplate">
-                                    <i class="fi fi-rr-download me-1"></i> Download Template CSV
+                    <div class="modal-body">
+                        <!-- File Upload -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">1. Upload File Excel</label>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" wire:click="downloadTemplate">
+                                    <i class="fi fi-rr-download me-1"></i> Download Template
                                 </button>
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Upload File CSV</label>
-                                <input type="file" class="form-control @error('importFile') is-invalid @enderror" 
-                                    wire:model="importFile" accept=".csv">
-                                @error('importFile') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                <div class="form-text text-muted">Kolom: Kecamatan, Desa, RW, RT (Pemisah Koma)</div>
+                            <p class="text-muted small mb-2">
+                                Format wajib (Header): <code>Kecamatan | Desa | RW | RT</code>. <br>
+                                Gunakan format <strong>.xlsx</strong> atau <strong>.xls</strong>.
+                            </p>
+                            <input type="file" class="form-control" wire:model.live="importFile" accept=".xlsx, .xls">
+                            @error('importFile') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                            <div wire:loading wire:target="importFile" class="text-primary mt-2 small">
+                                <i class="fi fi-rr-spinner fi-spin me-1"></i> Memproses file...
                             </div>
-                            
-                            <div wire:loading wire:target="importFile, importData">
-                                <div class="d-flex align-items-center text-primary">
-                                    <div class="spinner-border spinner-border-sm me-2"></div>
-                                    <small>Memproses data...</small>
+                        </div>
+
+                        <!-- Preview Table -->
+                        @if(!empty($previewData))
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">2. Preview Validasi</label>
+                                <div class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-sm table-striped mb-0 small">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>Kecamatan</th>
+                                                <th>Desa</th>
+                                                <th>RW</th>
+                                                <th>RT</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($previewData as $row)
+                                                <tr class="{{ $row['status'] === 'Invalid' ? 'table-danger' : '' }}">
+                                                    <td>{{ $row['kecamatan'] }}</td>
+                                                    <td>{{ $row['desa'] }}</td>
+                                                    <td>{{ $row['rw'] }}</td>
+                                                    <td>{{ $row['rt'] }}</td>
+                                                    <td>
+                                                        @if($row['status'] === 'Valid')
+                                                            <span class="badge bg-success">Valid</span>
+                                                        @else
+                                                            <span class="badge bg-danger" title="{{ $row['error'] }}">
+                                                                Invalid: {{ $row['error'] }}
+                                                            </span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <small class="text-muted">Menampilkan 100 baris pertama.</small>
+                                    @if(!$canImport)
+                                        <div class="text-danger small fw-bold">
+                                            <i class="fi fi-rr-exclamation me-1"></i> Data tidak valid ditemukan. Tidak dapat mengimport.
+                                        </div>
+                                    @else
+                                        <div class="text-success small fw-bold">
+                                            <i class="fi fi-rr-check me-1"></i> Semua data valid. Siap diimport.
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-light"
-                                wire:click="$set('showImportModal', false)">Batal</button>
-                            <button type="submit" class="btn btn-success" wire:loading.attr="disabled">Import Data</button>
-                        </div>
-                    </form>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" wire:click="closeImport">Batal</button>
+                        <button type="button" class="btn btn-primary" wire:click="saveImport" 
+                            {{ !$canImport ? 'disabled' : '' }}>
+                            <i class="fi fi-rr-file-import me-1"></i> Import Data
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

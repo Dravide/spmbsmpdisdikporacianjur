@@ -102,10 +102,27 @@
                             <div class="mt-2">{{ $pengumuman->jalur->nama }}</div>
                         </div>
 
-                        <p class="text-muted mb-4">
-                            Silakan melakukan daftar ulang sesuai dengan jadwal yang telah ditentukan.<br>
-                            Bawa bukti pendaftaran dan dokumen asli saat melakukan daftar ulang.
+                        Silakan melakukan daftar ulang sesuai dengan jadwal yang telah ditentukan.<br>
+                        Bawa bukti pendaftaran dan dokumen asli saat melakukan daftar ulang.
                         </p>
+
+                        @if($pengumuman->daftarUlang)
+                            <div class="alert alert-info d-inline-block px-4 py-2 mb-4">
+                                <div class="fw-bold mb-1"><i class="fi fi-rr-calendar-clock me-2"></i>JADWAL DAFTAR ULANG</div>
+                                <div class="fw-bold fs-5">
+                                    {{ $pengumuman->daftarUlang->tanggal->translatedFormat('l, d F Y') }}
+                                </div>
+                                <div class="small">
+                                    Pukul {{ $pengumuman->daftarUlang->waktu_mulai->format('H:i') }} -
+                                    {{ $pengumuman->daftarUlang->waktu_selesai->format('H:i') }} WIB
+                                </div>
+                                @if($pengumuman->daftarUlang->lokasi)
+                                    <div class="small mt-1 text-uppercase">
+                                        <i class="fi fi-rr-map-marker me-1"></i>{{ $pengumuman->daftarUlang->lokasi }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
 
                         <div class="d-flex justify-content-center gap-2">
                             @if($pengumuman->pendaftaran_id)

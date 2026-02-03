@@ -9,6 +9,10 @@
                 data-bs-target="#generateModal">
                 <i class="fi fi-rr-calendar-clock me-1"></i> Generate Jadwal
             </button>
+            <button class="btn btn-info text-white waves-effect waves-light" wire:click="downloadDaftarHadir"
+                wire:loading.attr="disabled">
+                <i class="fi fi-rr-print me-1"></i> Daftar Hadir
+            </button>
             <button class="btn btn-danger waves-effect waves-light" onclick="confirmResetData()">
                 <i class="fi fi-rr-trash me-1"></i> Reset Data
             </button>

@@ -20,7 +20,7 @@ class Announcement extends Component
         $pengumuman = null;
         if ($siswa) {
             $pengumuman = Pengumuman::where('peserta_didik_id', $siswa->id)
-                ->with(['sekolah', 'jalur'])
+                ->with(['sekolah', 'jalur', 'daftarUlang'])
                 ->first();
         }
 

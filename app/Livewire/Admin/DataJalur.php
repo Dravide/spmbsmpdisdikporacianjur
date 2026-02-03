@@ -78,6 +78,20 @@ class DataJalur extends Component
             'end_date' => $this->end_date,
         ];
 
+        // Validation for Total Percentage (Max 100%)
+        if ($this->aktif) {
+            $existingQuota = JalurPendaftaran::where('aktif', true)
+                ->when($this->isEditMode, function ($q) {
+                    $q->where('id', '!=', $this->jalurId);
+                })
+                ->sum('kuota');
+
+            if (($existingQuota + $this->kuota) > 100) {
+                $this->addError('kuota', 'Total kuota semua jalur aktif tidak boleh melebihi 100%. (Total saat ini: ' . $existingQuota . '%)');
+                return;
+            }
+        }
+
         if ($this->isEditMode) {
             $jalur = JalurPendaftaran::findOrFail($this->jalurId);
             $jalur->update($data);

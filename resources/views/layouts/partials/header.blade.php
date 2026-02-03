@@ -19,6 +19,13 @@
             </span>
         </div>
         <div class="app-header-end">
+            @if(auth()->check() && method_exists(auth()->user(), 'isAdmin') && auth()->user()->isAdmin())
+                <a href="{{ route('admin.eligible-siswa-domisili') }}"
+                    class="btn btn-icon {{ request()->routeIs('admin.eligible-siswa-domisili') ? 'btn-primary text-white' : 'btn-action-gray' }} rounded-circle waves-effect waves-light me-2"
+                    data-bs-toggle="tooltip" data-bs-placement="bottom" title="Eligible Siswa Domisili">
+                    <i class="fi fi-rr-map-marker-home scale-1x"></i>
+                </a>
+            @endif
             <div class="px-lg-3 px-2 ps-0 d-flex align-items-center">
                 <div class="dropdown">
                     <button

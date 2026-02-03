@@ -231,9 +231,14 @@
                 <td class="value">{{ $pendaftaran->jalur->nama ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="label">Sekolah Tujuan</td>
+                <td class="label">Sekolah Tujuan 1</td>
                 <td class="colon">:</td>
                 <td class="value">{{ $sekolah->nama ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Sekolah Tujuan 2</td>
+                <td class="colon">:</td>
+                <td class="value">{{ $pendaftaran->sekolah2->nama ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="label">Tanggal Daftar</td>

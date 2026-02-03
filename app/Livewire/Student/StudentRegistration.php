@@ -75,8 +75,11 @@ class StudentRegistration extends Component
 
     // Step 2: Pilih Sekolah
     public $searchSekolah = '';
+    public $searchSekolah2 = '';
     public $selectedSekolahId = null;
+    public $selectedSekolahId2 = null;
     public $selectedSekolahName = '';
+    public $selectedSekolahName2 = '';
 
     // Step 2: Koordinat
     public $latitude;
@@ -158,8 +161,13 @@ class StudentRegistration extends Component
 
             // Restore Draft Data
             $this->selectedSekolahId = $registration->sekolah_menengah_pertama_id;
+            $this->selectedSekolahId2 = $registration->sekolah_menengah_pertama_id_2;
+
             if ($registration->sekolah) {
                 $this->selectedSekolahName = $registration->sekolah->nama;
+            }
+            if ($registration->sekolah2) {
+                $this->selectedSekolahName2 = $registration->sekolah2->nama;
             }
 
             if ($registration->koordinat_lintang)
@@ -233,6 +241,7 @@ class StudentRegistration extends Component
         $data = [
             'peserta_didik_id' => $siswa->id,
             'sekolah_menengah_pertama_id' => $this->selectedSekolahId,
+            'sekolah_menengah_pertama_id_2' => $this->selectedSekolahId2,
             'jalur_pendaftaran_id' => $this->selectedJalurId,
             'koordinat_lintang' => $this->latitude,
             'koordinat_bujur' => $this->longitude,
@@ -339,6 +348,12 @@ class StudentRegistration extends Component
         }
     }
 
+    public function selectSekolah2($id, $name)
+    {
+        $this->selectedSekolahId2 = $id;
+        $this->selectedSekolahName2 = $name;
+    }
+
     public function updatedSelectedJalurId($value)
     {
         if ($value) {
@@ -377,7 +392,11 @@ class StudentRegistration extends Component
         } elseif ($step == 2) {
             $this->validate([
                 'selectedSekolahId' => 'required',
-            ], ['selectedSekolahId.required' => 'Silakan pilih sekolah tujuan.']);
+                'selectedSekolahId2' => 'required', // Requirement: Must choose both? assuming yes based on request
+            ], [
+                'selectedSekolahId.required' => 'Silakan pilih Sekolah Tujuan 1 (Full Online).',
+                'selectedSekolahId2.required' => 'Silakan pilih Sekolah Tujuan 2 (Semi Online).',
+            ]);
         } elseif ($step == 3) {
             $this->validate([
                 'latitude' => 'required',
@@ -527,12 +546,25 @@ class StudentRegistration extends Component
     public function render()
     {
         $sekolahList = [];
+        $sekolahList2 = [];
+
         if ($this->step == 2) {
+            // School 1: Full Online
             $sekolahList = SekolahMenengahPertama::query()
+                ->where('mode_spmb', 'Full Online')
                 ->when($this->searchSekolah, function ($query) {
                     $query->where('nama', 'like', '%' . $this->searchSekolah . '%');
                 })
-                ->orderByRaw("FIELD(mode_spmb, 'Full Online', 'Semi Online')")
+                ->orderBy('nama')
+                ->take(10)
+                ->get();
+
+            // School 2: Semi Online
+            $sekolahList2 = SekolahMenengahPertama::query()
+                ->where('mode_spmb', 'Semi Online')
+                ->when($this->searchSekolah2, function ($query) {
+                    $query->where('nama', 'like', '%' . $this->searchSekolah2 . '%');
+                })
                 ->orderBy('nama')
                 ->take(10)
                 ->get();
@@ -548,8 +580,10 @@ class StudentRegistration extends Component
 
         return view('livewire.student.student-registration', [
             'sekolahList' => $sekolahList,
+            'sekolahList2' => $sekolahList2,
             'selectedJalur' => $this->selectedJalurId ? JalurPendaftaran::find($this->selectedJalurId) : null,
             'selectedSekolah' => $this->selectedSekolahId ? SekolahMenengahPertama::find($this->selectedSekolahId) : null,
+            'selectedSekolah2' => $this->selectedSekolahId2 ? SekolahMenengahPertama::find($this->selectedSekolahId2) : null,
             'existingFiles' => $existingFiles,
             'isScheduleOpen' => $this->scheduleOpen,
             'scheduleMessage' => $this->scheduleMessage,

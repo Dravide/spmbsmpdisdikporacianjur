@@ -44,6 +44,14 @@ class SekolahDasar extends Model
     }
 
     /**
+     * Get students (peserta didik) associated with this school.
+     */
+    public function pesertaDidik()
+    {
+        return $this->hasMany(PesertaDidik::class, 'sekolah_id', 'sekolah_id');
+    }
+
+    /**
      * Get full address
      */
     public function getAlamatLengkapAttribute(): string

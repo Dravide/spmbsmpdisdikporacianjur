@@ -232,25 +232,24 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-primary"
-                                        onclick="openPdfPreview('{{ asset('storage/' . $item->file_path) }}', '{{ $item->berkas->nama ?? 'Berkas' }}', {{ json_encode($item->form_data) }}, {{ json_encode($item->berkas->form_fields ?? []) }})"
-                                        title="Preview">
-                                        <i class="fi fi-rr-eye"></i>
+                                    <button type="button" class="btn btn-sm btn-subtle-primary waves-effect waves-light"
+                                        onclick="openPdfPreview({{ json_encode(asset('storage/' . $item->file_path)) }}, {{ json_encode($item->berkas->nama ?? 'Berkas') }}, {{ json_encode($item->form_data) }}, {{ json_encode($item->berkas->form_fields ?? []) }})">
+                                        <i class="fi fi-rr-eye me-1"></i> Lihat
                                     </button>
                                     @if($pendaftaran->status != 'draft')
                                         @if($item->status_berkas !== 'approved')
-                                            <button class="btn btn-sm btn-success" wire:click="quickApprove({{ $item->id }})"
-                                                title="Setujui">
-                                                <i class="fi fi-rr-check"></i>
+                                            <button class="btn btn-sm btn-subtle-success waves-effect waves-light"
+                                                wire:click="quickApprove({{ $item->id }})">
+                                                <i class="fi fi-rr-check me-1"></i> Setujui
                                             </button>
                                         @endif
-                                        <button class="btn btn-sm btn-outline-secondary" wire:click="openModal({{ $item->id }})"
-                                            title="Ubah Status">
-                                            <i class="fi fi-rr-edit"></i>
+                                        <button class="btn btn-sm btn-subtle-secondary waves-effect waves-light"
+                                            wire:click="openModal({{ $item->id }})">
+                                            <i class="fi fi-rr-edit me-1"></i> Ubah
                                         </button>
                                     @else
-                                        <button class="btn btn-sm btn-secondary" disabled title="Draft: Tidak dapat diubah">
-                                            <i class="fi fi-rr-lock"></i>
+                                        <button class="btn btn-sm btn-subtle-secondary waves-effect waves-light" disabled>
+                                            <i class="fi fi-rr-lock me-1"></i> Draft
                                         </button>
                                     @endif
                                 </td>
@@ -336,7 +335,7 @@
                         </div>
                         <!-- Viewer Side -->
                         <div class="col-md-12" id="viewerPanel" style="height: 70vh;">
-                            <div id="pdfViewer" style="width: 100%; height: 100%;"></div>
+                            <div id="pdfViewerContainer" style="width: 100%; height: 100%;" wire:ignore></div>
                         </div>
                     </div>
                 </div>
@@ -384,11 +383,11 @@
                 for (const [key, value] of Object.entries(formData)) {
                     const label = fieldLabels[key] || key;
                     html += `
-                                            <div class="card card-body p-2 mb-2 border shadow-none bg-white">
-                                                <small class="text-muted d-block" style="font-size: 0.75rem;">${label}</small>
-                                                <span class="fw-bold text-dark text-break">${value}</span>
-                                            </div>
-                                        `;
+                                                                                    <div class="card card-body p-2 mb-2 border shadow-none bg-white">
+                                                                                        <small class="text-muted d-block" style="font-size: 0.75rem;">${label}</small>
+                                                                                        <span class="fw-bold text-dark text-break">${value}</span>
+                                                                                    </div>
+                                                                                `;
                 }
                 metaContent.innerHTML = html;
             } else {
@@ -400,8 +399,9 @@
             }
             // -------------------------------
 
-            const viewerElement = document.getElementById('pdfViewer');
-            viewerElement.innerHTML = '';
+            const viewerElement = document.getElementById('pdfViewerContainer');
+            if (!viewerElement) return;
+            viewerElement.innerHTML = ''; // Clear container
 
             // Check file extension
             // Remove params if any
@@ -409,47 +409,77 @@
             const ext = cleanUrl.split('.').pop().toLowerCase();
 
             if (ext === 'pdf') {
-                // Use PDF.js Express for PDF files
+                // STATELSS: Always start fresh with a new element
+                const newViewerDiv = document.createElement('div');
+                newViewerDiv.style.width = '100%';
+                newViewerDiv.style.height = '100%';
+                viewerElement.appendChild(newViewerDiv);
+
+                webViewerInstance = null; // Clear old reference
+
                 WebViewer({
                     path: '{{ asset("lib/pdfjs-express") }}',
                     initialDoc: fileUrl,
                     disabledElements: [
+                        'notesPanel',
+                        'notesPanelButton',
+                        'toggleNotesButton',
                         'toolsHeader',
-                        'viewControlsButton',
-                        'leftPanelButton',
                         'searchButton',
                         'menuButton',
+                        'rubbers',
+                        'highlightToolGroupButton',
+                        'underlineToolGroupButton',
+                        'strikeoutToolGroupButton',
+                        'squigglyToolGroupButton',
+                        'stickyToolGroupButton',
+                        'freeHandToolGroupButton',
+                        'freeTextToolGroupButton',
+                        'freeHandHighlightToolGroupButton',
+                        'shapeToolGroupButton',
                     ]
-                }, viewerElement).then(instance => {
+                }, newViewerDiv).then(instance => {
                     webViewerInstance = instance;
                     instance.UI.setTheme('light');
                 }).catch(err => {
                     console.error(err);
                     viewerElement.innerHTML = `
-                                            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-                                                <i class="fi fi-rr-exclamation fs-1 mb-2"></i>
-                                                <p>Gagal memuat PDF. <a href="${fileUrl}" target="_blank">Klik di sini untuk membuka file</a>.</p>
-                                            </div>
-                                        `;
+                                                                                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                                                                                    <i class="fi fi-rr-exclamation fs-1 mb-2"></i>
+                                                                                    <p>Gagal memuat PDF. <a href="${fileUrl}" target="_blank">Klik di sini untuk membuka file</a>.</p>
+                                                                                </div>
+                                                                            `;
                 });
             } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                // Clear viewer for image
+                viewerElement.innerHTML = '';
+                if (webViewerInstance) {
+                    webViewerInstance = null;
+                }
+
                 // Display image directly
                 viewerElement.innerHTML = `
-                                        <div class="d-flex align-items-center justify-content-center h-100 bg-light">
-                                            <img src="${fileUrl}" alt="${fileName}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                                        </div>
-                                    `;
+                                                                            <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                                                                                <img src="${fileUrl}" alt="${fileName}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                                                            </div>
+                                                                        `;
             } else {
+                // Clear viewer for unsupported
+                viewerElement.innerHTML = '';
+                if (webViewerInstance) {
+                    webViewerInstance = null;
+                }
+
                 // Unsupported file type
                 viewerElement.innerHTML = `
-                                        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-                                            <i class="fi fi-rr-file fs-1 mb-2"></i>
-                                            <p>Preview tidak tersedia untuk jenis file ini.</p>
-                                            <a href="${fileUrl}" target="_blank" class="btn btn-outline-primary">
-                                                <i class="fi fi-rr-download me-1"></i> Download File
-                                            </a>
-                                        </div>
-                                    `;
+                                                                            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                                                                                <i class="fi fi-rr-file fs-1 mb-2"></i>
+                                                                                <p>Preview tidak tersedia untuk jenis file ini.</p>
+                                                                                <a href="${fileUrl}" target="_blank" class="btn btn-outline-primary">
+                                                                                    <i class="fi fi-rr-download me-1"></i> Download File
+                                                                                </a>
+                                                                            </div>
+                                                                        `;
             }
 
             modal.show();
@@ -457,11 +487,9 @@
 
         // Clean up when modal is closed
         document.getElementById('pdfPreviewModal').addEventListener('hidden.bs.modal', function () {
-            if (webViewerInstance) {
-                // webViewerInstance.dispose(); // Optional, depending on library behavior
-                webViewerInstance = null;
-            }
-            document.getElementById('pdfViewer').innerHTML = '';
+            const ctr = document.getElementById('pdfViewerContainer');
+            if (ctr) ctr.innerHTML = '';
+            webViewerInstance = null;
         });
     </script>
 @endpush
