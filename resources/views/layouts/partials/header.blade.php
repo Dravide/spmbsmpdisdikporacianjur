@@ -34,6 +34,68 @@
                 </div>
             @endif
 
+
+
+            {{-- Admin Settings Shortcuts --}}
+            @if(auth()->check() && method_exists(auth()->user(), 'isAdmin') && auth()->user()->isAdmin())
+                <div class="px-lg-2 px-1">
+                    <div class="dropdown">
+                        <button class="btn btn-icon btn-action-gray rounded-circle waves-effect waves-light" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false" title="Pengaturan Sistem">
+                            <i class="fi fi-rr-settings-sliders scale-1x"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width: 200px;">
+                            <li>
+                                <h6 class="dropdown-header text-uppercase fw-bold small text-muted">Aplikasi & Sistem</h6>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2"
+                                    href="{{ route('admin.settings') }}">
+                                    <i class="fi fi-rr-settings"></i> Pengaturan Aplikasi
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2"
+                                    href="{{ route('admin.seo-settings') }}">
+                                    <i class="fi fi-rr-search-alt"></i> Pengaturan SEO
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('settings') }}">
+                                    <i class="fi fi-rr-key"></i> Role & Permissions
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <h6 class="dropdown-header text-uppercase fw-bold small text-muted">Monitoring</h6>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2"
+                                    href="{{ route('admin.activity-log') }}">
+                                    <i class="fi fi-rr-time-past"></i> Log Aktivitas
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('sessions') }}">
+                                    <i class="fi fi-rr-devices"></i> Sesi Aktif
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2"
+                                    href="{{ route('admin.data-admin') }}">
+                                    <i class="fi fi-rr-user-shield"></i> Data Administrator
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             <div class="px-lg-3 px-2 ps-0 d-flex align-items-center">
                 <div class="dropdown">
                     <button

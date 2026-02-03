@@ -14,6 +14,8 @@ class ActiveSessions extends Component
 {
     use WithPagination;
 
+    protected $paginationTheme = 'bootstrap';
+
     public string $search = '';
 
     public function updatingSearch()

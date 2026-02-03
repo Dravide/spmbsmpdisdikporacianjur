@@ -106,18 +106,6 @@
                 <li class="menu-heading">
                     <span class="menu-label">Pengaturan & Sistem</span>
                 </li>
-                <li class="menu-item {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
-                    <a class="menu-link" href="{{ route('admin.settings') }}">
-                        <i class="fi fi-rr-settings"></i>
-                        <span class="menu-label">Pengaturan Aplikasi</span>
-                    </a>
-                </li>
-                <li class="menu-item {{ request()->routeIs('admin.seo-settings') ? 'active' : '' }}">
-                    <a class="menu-link" href="{{ route('admin.seo-settings') }}">
-                        <i class="fi fi-rr-search"></i>
-                        <span class="menu-label">Pengaturan SEO</span>
-                    </a>
-                </li>
                 <li class="menu-item {{ request()->routeIs('admin.jadwal') ? 'active' : '' }}">
                     <a class="menu-link" href="{{ route('admin.jadwal') }}">
                         <i class="fi fi-rr-calendar"></i>
@@ -139,35 +127,6 @@
                     <a class="menu-link" href="{{ route('admin.peta-persebaran') }}">
                         <i class="fi fi-rr-map"></i>
                         <span class="menu-label">Peta Persebaran</span>
-                    </a>
-                </li>
-                <li class="menu-item {{ request()->routeIs('admin.activity-log') ? 'active' : '' }}">
-                    <a class="menu-link" href="{{ route('admin.activity-log') }}">
-                        <i class="fi fi-rr-time-past"></i>
-                        <span class="menu-label">Log Aktivitas</span>
-                    </a>
-                </li>
-
-                {{-- Manajemen Pengguna --}}
-                <li class="menu-heading">
-                    <span class="menu-label">Manajemen Pengguna</span>
-                </li>
-                <li class="menu-item {{ request()->routeIs('admin.data-admin') ? 'active' : '' }}">
-                    <a class="menu-link" href="{{ route('admin.data-admin') }}">
-                        <i class="fi fi-rr-user-shield"></i>
-                        <span class="menu-label">Data Administrator</span>
-                    </a>
-                </li>
-                <li class="menu-item {{ request()->routeIs('settings*') ? 'active' : '' }}">
-                    <a class="menu-link" href="{{ route('settings') }}">
-                        <i class="fi fi-rr-shield-check"></i>
-                        <span class="menu-label">Pengaturan Role</span>
-                    </a>
-                </li>
-                <li class="menu-item {{ request()->routeIs('sessions*') ? 'active' : '' }}">
-                    <a class="menu-link" href="{{ route('sessions') }}">
-                        <i class="fi fi-rr-user-time"></i>
-                        <span class="menu-label">Sesi Aktif</span>
                     </a>
                 </li>
             @endif
