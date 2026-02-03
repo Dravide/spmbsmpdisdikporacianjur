@@ -11,6 +11,7 @@ Route::get('/', AdminDashboard::class)->name('admin.dashboard');
 
 Route::get('/settings', RoleSettings::class)->name('settings');
 Route::get('/app-settings', \App\Livewire\Admin\SettingApp::class)->name('admin.settings');
+Route::get('/seo-settings', \App\Livewire\Admin\SettingSeo::class)->name('admin.seo-settings');
 Route::get('/jadwal', \App\Livewire\Admin\Jadwal\JadwalManager::class)->name('admin.jadwal');
 Route::get('/sessions', ActiveSessions::class)->name('sessions');
 Route::get('/sekolah-sd', DataSekolah::class)->name('admin.sekolah');
@@ -26,3 +27,6 @@ Route::get('/pemetaan-domisili', \App\Livewire\Admin\PemetaanDomisili::class)->n
 Route::get('/eligible-siswa-domisili', \App\Livewire\Admin\EligibleSiswaDomisili::class)->name('admin.eligible-siswa-domisili');
 Route::get('/daya-tampung', \App\Livewire\Admin\DataDayaTampung::class)->name('admin.daya-tampung');
 Route::get('/data-admin', \App\Livewire\Admin\DataAdmin::class)->name('admin.data-admin');
+Route::get('/activity-log', \App\Livewire\Admin\ActivityLogViewer::class)->name('admin.activity-log');
+Route::get('/laporan', \App\Livewire\Admin\LaporanExport::class)->name('admin.laporan');
+Route::get('/peta-persebaran', \App\Livewire\Admin\PetaPersebaran::class)->name('admin.peta-persebaran');

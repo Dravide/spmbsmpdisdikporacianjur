@@ -26,6 +26,14 @@
                     <i class="fi fi-rr-map-marker-home scale-1x"></i>
                 </a>
             @endif
+
+            {{-- Notification Bell for Siswa --}}
+            @if(auth('siswa')->check())
+                <div class="me-2">
+                    @livewire('components.notification-bell')
+                </div>
+            @endif
+
             <div class="px-lg-3 px-2 ps-0 d-flex align-items-center">
                 <div class="dropdown">
                     <button

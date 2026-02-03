@@ -49,6 +49,9 @@ class SettingApp extends Component
         Setting::updateOrCreate(['key' => 'site_mode'], ['value' => $this->site_mode]);
         \Illuminate\Support\Facades\Cache::forget('setting_site_mode');
 
+        Setting::updateOrCreate(['key' => 'site_mode'], ['value' => $this->site_mode]);
+        \Illuminate\Support\Facades\Cache::forget('setting_site_mode');
+
         if ($this->app_logo_image) {
             // Delete old image if exists
             if ($this->existing_logo_image) {

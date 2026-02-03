@@ -130,9 +130,17 @@ class VervalBerkasDetail extends Component
 
         if (!$hasPendingOrRejected) {
             $this->pendaftaran->status = 'verified';
-            $this->pendaftaran->verified_at = now(); // Assuming verified_at column exists, otherwise remove
-            $this->pendaftaran->verified_by = Auth::id(); // Assuming verified_by column exists
+            $this->pendaftaran->verified_at = now();
+            $this->pendaftaran->verified_by = Auth::id();
             $this->pendaftaran->save();
+
+            // Send Notification
+            if ($this->pendaftaran->pesertaDidik) {
+                $this->pendaftaran->pesertaDidik->notify(
+                    \App\Notifications\StatusChangedNotification::verificationStatus($this->pendaftaran, 'verified')
+                );
+            }
+
             session()->flash('message', 'Semua berkas lengkap. Status pendaftaran otomatis berubah menjadi TERVERIFIKASI.');
         } else {
             // Optional: revert to submitted if not all approved? 

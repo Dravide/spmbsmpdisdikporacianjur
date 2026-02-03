@@ -139,6 +139,14 @@ class JalurVerifiedDetail extends Component
             );
 
             $count++;
+
+            // Notification for Announcement
+            if ($student->pesertaDidik) {
+                $notifStatus = $status === 'lulus' ? 'diterima' : 'ditolak';
+                $student->pesertaDidik->notify(
+                    \App\Notifications\StatusChangedNotification::announcement($notifStatus)
+                );
+            }
         }
 
         session()->flash('message', 'Pengumuman berhasil diproses.');

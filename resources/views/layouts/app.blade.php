@@ -10,8 +10,8 @@
         {{ function_exists('get_setting') ? get_setting('app_name', 'SPMB Disdikpora Cianjur') : 'SPMB Disdikpora Cianjur' }}
     </title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('templates/assets/images/favicon.png') }}">
+    <!-- SEO Meta Tags, Favicons, OpenGraph, Google Integration -->
+    @include('layouts.partials.seo-head')
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,6 +38,7 @@
 </head>
 
 <body>
+    @include('layouts.partials.gtm-body')
     <div class="page-layout">
         <!-- Header -->
         @include('layouts.partials.header')

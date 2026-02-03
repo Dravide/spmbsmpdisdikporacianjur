@@ -81,6 +81,14 @@ class SekolahMenengahPertama extends Model
     }
 
     /**
+     * Get all registrations (pendaftaran) for this school
+     */
+    public function pendaftarans()
+    {
+        return $this->hasMany(Pendaftaran::class, 'sekolah_menengah_pertama_id', 'sekolah_id');
+    }
+
+    /**
      * Get human readable Bentuk Pendidikan
      */
     public function getBentukPendidikanDisplayAttribute()

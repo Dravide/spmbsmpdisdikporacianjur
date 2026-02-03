@@ -6,12 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Login' }} -
-        {{ function_exists('get_setting') ? get_setting('app_name', 'SPMB Disdikpora Cianjur') : 'SPMB Disdikpora Cianjur' }}
-    </title>
+    <title>{{ $title ?? 'Selamat Datang' }} - {{ get_setting('app_name', 'SPMB Disdikpora Cianjur') }}</title>
 
-    <!-- SEO Meta Tags, Favicons, OpenGraph, Google Integration -->
     @include('layouts.partials.seo-head')
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('templates/assets/images/favicon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('templates/assets/images/apple-touch-icon.png') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,13 +20,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
         rel="stylesheet">
 
-    <!-- GXON Stylesheets -->
+    <!-- GXON Required Stylesheet -->
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/flaticon/css/all/all.css') }}">
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/lucide/lucide.css') }}">
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/simplebar/simplebar.css') }}">
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/node-waves/waves.css') }}">
-    <link rel="stylesheet" href="{{ asset('templates/assets/libs/bootstrap-select/css/bootstrap-select.min.css') }}">
+
+    <!-- GXON CSS Stylesheet -->
     <link rel="stylesheet" href="{{ asset('templates/assets/css/styles.css') }}">
 
     @livewireStyles
@@ -33,16 +35,15 @@
 
 <body>
     @include('layouts.partials.gtm-body')
-    <div class="page-layout">
-        {{ $slot }}
-    </div>
 
-    <!-- GXON Scripts -->
+    {{ $slot }}
+
+    <!-- GXON Page Scripts -->
     <script src="{{ asset('templates/assets/libs/global/global.min.js') }}"></script>
-    <script src="{{ asset('templates/assets/js/appSettings.js') }}"></script>
     <script src="{{ asset('templates/assets/js/main.js') }}"></script>
 
     @livewireScripts
+    @stack('scripts')
 </body>
 
 </html>

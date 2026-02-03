@@ -18,4 +18,7 @@ Route::middleware('auth:siswa')->group(function () {
     Route::get('/cetak-kartu/{id}', [\App\Http\Controllers\PrintController::class, 'cetakKartu'])->name('print.kartu');
     Route::get('/cetak-bukti/{id}', [\App\Http\Controllers\PrintController::class, 'cetakBukti'])->name('print.bukti');
     Route::get('/cetak-bukti-lulus/{id}', [\App\Http\Controllers\PrintController::class, 'cetakBuktiLulus'])->name('print.bukti-lulus');
+
+    // Notifications
+    Route::get('/notifikasi', \App\Livewire\Student\NotificationList::class)->name('siswa.notifikasi');
 });

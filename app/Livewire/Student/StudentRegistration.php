@@ -534,6 +534,22 @@ class StudentRegistration extends Component
             $this->isSubmitted = true;
             $this->registrationData = $pendaftaran->fresh();
 
+            // Send Notification
+            $pendaftaran->load('pesertaDidik');
+
+            if ($pendaftaran->pesertaDidik) {
+                try {
+                    $pendaftaran->pesertaDidik->notify(
+                        \App\Notifications\StatusChangedNotification::registrationSuccess($pendaftaran)
+                    );
+                } catch (\Exception $ex) {
+                    // Log error silently or flash if needed, usually log is better
+                    \Illuminate\Support\Facades\Log::error('Notification Error: ' . $ex->getMessage());
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::warning('Notification Skipped: PesertaDidik relation not found for Pendaftaran ID ' . $pendaftaran->id);
+            }
+
             session()->flash('message', 'Pendaftaran berhasil dikirim! Silakan tunggu verifikasi.');
             // return redirect()->route('dashboard.siswa'); // Disabled redirect to show success view
 

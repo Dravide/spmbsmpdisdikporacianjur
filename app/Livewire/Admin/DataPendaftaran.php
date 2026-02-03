@@ -107,6 +107,21 @@ class DataPendaftaran extends Component
             }
 
             session()->flash('message', 'Status pendaftaran berhasil diperbarui.');
+
+            // Send Notification based on status
+            if ($pendaftaran->pesertaDidik && in_array($this->newStatus, ['verified', 'rejected', 'accepted', 'diterima', 'ditolak'])) {
+                if ($this->newStatus == 'verified' || $this->newStatus == 'rejected') {
+                    $pendaftaran->pesertaDidik->notify(
+                        \App\Notifications\StatusChangedNotification::verificationStatus($pendaftaran, $this->newStatus, $this->catatan)
+                    );
+                } elseif ($this->newStatus == 'accepted' || $this->newStatus == 'diterima' || $this->newStatus == 'ditolak') {
+                    // Normalize status for announcement
+                    $status = ($this->newStatus == 'accepted') ? 'diterima' : $this->newStatus;
+                    $pendaftaran->pesertaDidik->notify(
+                        \App\Notifications\StatusChangedNotification::announcement($status)
+                    );
+                }
+            }
         }
 
         $this->closeStatusModal();
