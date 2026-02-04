@@ -7,6 +7,7 @@ use App\Livewire\Auth\Login;
 Route::middleware('guest')->group(function () {
     Route::get('/', Login::class)->name('login');
     Route::get('/login', Login::class);
+    Route::post('/force-login', [AuthController::class, 'forceLogin'])->name('force-login');
 });
 
 // Logout Route - accessible by both web and siswa guards

@@ -158,15 +158,14 @@
                         <button type="button" class="btn btn-secondary" wire:click="cancelForceLogout">
                             <i class="ti ti-x me-1"></i>Batal
                         </button>
-                        <button type="button" class="btn btn-warning" wire:click="forceLogoutAndLogin"
-                            wire:loading.attr="disabled">
-                            <span wire:loading.remove wire:target="forceLogoutAndLogin">
+                        <form action="{{ route('force-login') }}" method="POST" class="d-inline">
+                            @csrf
+                            <input type="hidden" name="user_id" value="{{ $pendingUserId }}">
+                            <input type="hidden" name="remember" value="{{ $remember ? '1' : '0' }}">
+                            <button type="submit" class="btn btn-warning">
                                 <i class="ti ti-logout me-1"></i>Logout Semua & Lanjutkan
-                            </span>
-                            <span wire:loading wire:target="forceLogoutAndLogin">
-                                <span class="spinner-border spinner-border-sm me-1"></span>Memproses...
-                            </span>
-                        </button>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
