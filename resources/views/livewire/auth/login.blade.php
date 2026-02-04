@@ -112,4 +112,64 @@
             </div>
         </div>
     </div>
+
+    {{-- Force Logout Modal --}}
+    @if($showForceLogoutModal)
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="ti ti-alert-triangle me-2"></i>Batas Lokasi Login Tercapai
+                        </h5>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-3">Anda sudah login dari beberapa lokasi/perangkat lain. Untuk melanjutkan, Anda dapat
+                            logout dari semua perangkat lain.</p>
+
+                        <div class="alert alert-light border">
+                            <strong class="d-block mb-2">Sesi Aktif:</strong>
+                            @foreach($activeSessions as $session)
+                                <div
+                                    class="d-flex justify-content-between align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                    <div>
+                                        <i class="ti ti-device-desktop me-1"></i>
+                                        <span class="fw-medium">{{ $session['device_name'] ?? 'Unknown Device' }}</span>
+                                        <br>
+                                        <small class="text-muted">
+                                            IP: {{ $session['ip_address'] }}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            {{ \Carbon\Carbon::parse($session['last_activity'])->diffForHumans() }}
+                                        </small>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="alert alert-warning mb-0">
+                            <i class="ti ti-info-circle me-1"></i>
+                            Semua sesi di atas akan di-logout jika Anda melanjutkan.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="cancelForceLogout">
+                            <i class="ti ti-x me-1"></i>Batal
+                        </button>
+                        <button type="button" class="btn btn-warning" wire:click="forceLogoutAndLogin"
+                            wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="forceLogoutAndLogin">
+                                <i class="ti ti-logout me-1"></i>Logout Semua & Lanjutkan
+                            </span>
+                            <span wire:loading wire:target="forceLogoutAndLogin">
+                                <span class="spinner-border spinner-border-sm me-1"></span>Memproses...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

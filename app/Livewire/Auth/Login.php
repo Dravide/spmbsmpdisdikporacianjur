@@ -22,6 +22,11 @@ class Login extends Component
 
     public bool $remember = false;
 
+    // Force logout modal state
+    public bool $showForceLogoutModal = false;
+    public ?int $pendingUserId = null;
+    public array $activeSessions = [];
+
     public function login()
     {
         $this->validate();
@@ -49,10 +54,16 @@ class Login extends Component
             // Check location limit
             $ipAddress = request()->ip();
             if (!$user->canLoginFromNewLocation($ipAddress)) {
+                // Store pending login data and show modal
+                $this->pendingUserId = $user->id;
+                $this->activeSessions = $user->loginSessions()
+                    ->select('id', 'ip_address', 'device_name', 'last_activity')
+                    ->orderBy('last_activity', 'desc')
+                    ->get()
+                    ->toArray();
+                $this->showForceLogoutModal = true;
+
                 Auth::logout();
-                $roleSetting = $user->roleSetting();
-                $maxLocations = $roleSetting ? $roleSetting->max_login_locations : 2;
-                $this->addError('username', "Anda sudah login dari {$maxLocations} lokasi berbeda. Logout dari lokasi lain terlebih dahulu.");
                 return;
             }
 
@@ -90,6 +101,89 @@ class Login extends Component
 
         RateLimiter::hit($throttleKey);
         $this->addError('username', 'Username atau password salah.');
+    }
+
+    /**
+     * Force logout all other sessions and proceed with login.
+     */
+    public function forceLogoutAndLogin()
+    {
+        if (!$this->pendingUserId) {
+            $this->showForceLogoutModal = false;
+            return;
+        }
+
+        $user = \App\Models\User::find($this->pendingUserId);
+
+        if (!$user) {
+            $this->resetForceLogoutState();
+            $this->addError('username', 'User tidak ditemukan.');
+            return;
+        }
+
+        // Get all session IDs for this user
+        $sessionIds = $user->loginSessions()->pluck('session_id')->toArray();
+
+        // Delete from Laravel sessions table
+        if (!empty($sessionIds)) {
+            \Illuminate\Support\Facades\DB::table('sessions')
+                ->whereIn('id', $sessionIds)
+                ->delete();
+        }
+
+        // Delete all login sessions for this user
+        $terminatedCount = $user->loginSessions()->delete();
+
+        // Log the force logout activity
+        if (class_exists(\App\Models\ActivityLog::class)) {
+            \App\Models\ActivityLog::create([
+                'log_type' => 'login',
+                'action' => 'force_logout',
+                'description' => "Force logout {$terminatedCount} sesi dari perangkat lain",
+                'causer_type' => get_class($user),
+                'causer_id' => $user->id,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        }
+
+        // Now authenticate and create new session
+        Auth::guard('web')->login($user, $this->remember);
+        session()->regenerate();
+
+        // Create new login session
+        LoginSession::create([
+            'user_id' => $user->id,
+            'session_id' => session()->getId(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'device_name' => LoginSession::parseDeviceName(request()->userAgent()),
+            'location' => null,
+            'last_activity' => now(),
+        ]);
+
+        $this->resetForceLogoutState();
+
+        // Redirect based on role
+        return redirect()->intended($this->getDashboardRoute($user->role));
+    }
+
+    /**
+     * Cancel force logout and reset state.
+     */
+    public function cancelForceLogout()
+    {
+        $this->resetForceLogoutState();
+    }
+
+    /**
+     * Reset force logout modal state.
+     */
+    protected function resetForceLogoutState()
+    {
+        $this->showForceLogoutModal = false;
+        $this->pendingUserId = null;
+        $this->activeSessions = [];
     }
 
     protected function getDashboardRoute(string $role): string
