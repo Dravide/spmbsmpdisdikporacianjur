@@ -121,8 +121,14 @@ class Login extends Component
             return;
         }
 
-        // Get all session IDs for this user
-        $sessionIds = $user->loginSessions()->pluck('session_id')->toArray();
+        // Get current session ID before any changes
+        $currentSessionId = session()->getId();
+
+        // Get all session IDs for this user (excluding current if exists)
+        $sessionIds = $user->loginSessions()
+            ->where('session_id', '!=', $currentSessionId)
+            ->pluck('session_id')
+            ->toArray();
 
         // Delete from Laravel sessions table
         if (!empty($sessionIds)) {
@@ -147,11 +153,10 @@ class Login extends Component
             ]);
         }
 
-        // Now authenticate and create new session
+        // Login the user
         Auth::guard('web')->login($user, $this->remember);
-        session()->regenerate();
 
-        // Create new login session
+        // Create new login session using current session
         LoginSession::create([
             'user_id' => $user->id,
             'session_id' => session()->getId(),
@@ -164,8 +169,8 @@ class Login extends Component
 
         $this->resetForceLogoutState();
 
-        // Redirect based on role
-        return redirect()->intended($this->getDashboardRoute($user->role));
+        // Use redirect without session regeneration to avoid Livewire CSRF issues
+        return $this->redirect($this->getDashboardRoute($user->role), navigate: true);
     }
 
     /**
