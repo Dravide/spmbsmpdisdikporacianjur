@@ -46,7 +46,7 @@ class ActiveSessions extends Component
         $sessionIds = LoginSession::where('user_id', $userId)->pluck('session_id')->toArray();
 
         // Delete from standard sessions table
-        if (!empty($sessionIds)) {
+        if (! empty($sessionIds)) {
             \Illuminate\Support\Facades\DB::table('sessions')
                 ->whereIn('id', $sessionIds)
                 ->delete();
@@ -61,9 +61,9 @@ class ActiveSessions extends Component
         $sessions = LoginSession::with('user')
             ->when($this->search, function ($query) {
                 $query->whereHas('user', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('username', 'like', '%' . $this->search . '%');
-                })->orWhere('ip_address', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('username', 'like', '%'.$this->search.'%');
+                })->orWhere('ip_address', 'like', '%'.$this->search.'%');
             })
             ->orderBy('last_activity', 'desc')
             ->paginate(10);

@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
@@ -18,7 +17,9 @@ class DataSekolahSMP extends Component
     use WithPagination;
 
     public string $search = '';
+
     public ?SekolahMenengahPertama $selectedSekolah = null;
+
     public bool $showDetail = false;
 
     // Create/Edit Form
@@ -35,8 +36,11 @@ class DataSekolahSMP extends Component
         'kode_wilayah' => '',
         'bentuk_pendidikan_id' => 'SMP',
     ];
+
     public $showCreateModal = false;
+
     public $isEditMode = false;
+
     public $editId = null;
 
     public function updatingSearch()
@@ -141,14 +145,14 @@ class DataSekolahSMP extends Component
             $this->dispatch('import-success', message: 'Data sekolah SMP berhasil ditambahkan.');
 
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal menyimpan data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal menyimpan data: '.$e->getMessage());
         }
     }
 
     public function update()
     {
         $this->validate([
-            'form.npsn' => 'required|numeric|unique:sekolah_menengah_pertamas,npsn,' . $this->editId . ',sekolah_id',
+            'form.npsn' => 'required|numeric|unique:sekolah_menengah_pertamas,npsn,'.$this->editId.',sekolah_id',
             'form.nama' => 'required|string|max:255',
             'form.status_sekolah' => 'required|in:Negeri,Swasta',
             'form.mode_spmb' => 'required|in:Full Online,Semi Online',
@@ -188,7 +192,7 @@ class DataSekolahSMP extends Component
             $this->dispatch('import-success', message: 'Data sekolah SMP berhasil diperbarui.');
 
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal memperbarui data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal memperbarui data: '.$e->getMessage());
         }
     }
 
@@ -201,7 +205,7 @@ class DataSekolahSMP extends Component
             $sekolah->delete();
             $this->dispatch('import-success', message: 'Data sekolah SMP berhasil dihapus.');
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal menghapus data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal menghapus data: '.$e->getMessage());
         }
     }
 
@@ -224,7 +228,7 @@ class DataSekolahSMP extends Component
             $this->generateOpsmpAccount($sekolah);
             $this->dispatch('import-success', message: 'Akun operator (OPSMP) berhasil digenerate.');
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal generate akun: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal generate akun: '.$e->getMessage());
         }
     }
 
@@ -232,7 +236,7 @@ class DataSekolahSMP extends Component
     {
         $existingUser = User::where('username', $sekolah->npsn)->first();
 
-        if (!$existingUser) {
+        if (! $existingUser) {
             User::create([
                 'name' => $sekolah->nama,
                 'username' => $sekolah->npsn,
@@ -256,9 +260,9 @@ class DataSekolahSMP extends Component
     {
         $sekolah = SekolahMenengahPertama::query()
             ->when($this->search, function ($query) {
-                $query->where('nama', 'like', '%' . $this->search . '%')
-                    ->orWhere('npsn', 'like', '%' . $this->search . '%')
-                    ->orWhere('desa_kelurahan', 'like', '%' . $this->search . '%');
+                $query->where('nama', 'like', '%'.$this->search.'%')
+                    ->orWhere('npsn', 'like', '%'.$this->search.'%')
+                    ->orWhere('desa_kelurahan', 'like', '%'.$this->search.'%');
             })
             ->with('operator')
             ->orderBy('nama')
@@ -286,10 +290,9 @@ class DataSekolahSMP extends Component
                 $this->dispatch('import-error', message: 'Operator tidak ditemukan atau 2FA belum aktif.');
             }
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal mereset 2FA: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal mereset 2FA: '.$e->getMessage());
         }
     }
-
 
     public function paginationView()
     {

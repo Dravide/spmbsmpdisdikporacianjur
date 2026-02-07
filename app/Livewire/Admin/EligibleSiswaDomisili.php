@@ -3,7 +3,6 @@
 namespace App\Livewire\Admin;
 
 use App\Models\PesertaDidik;
-use App\Models\SekolahMenengahPertama;
 use App\Models\ZonaDomisili;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -20,7 +19,9 @@ class EligibleSiswaDomisili extends Component
 
     // Detail Modal
     public $showDetailModal = false;
+
     public $selectedSiswa = null;
+
     public $eligibleSekolahList = [];
 
     protected $queryString = ['search'];
@@ -34,7 +35,7 @@ class EligibleSiswaDomisili extends Component
     {
         $siswa = PesertaDidik::with('sekolah')->find($siswaId);
 
-        if (!$siswa) {
+        if (! $siswa) {
             return;
         }
 
@@ -46,18 +47,19 @@ class EligibleSiswaDomisili extends Component
 
         // Match Kecamatan (required)
         if ($siswa->kecamatan) {
-            $query->where('kecamatan', 'like', '%' . $siswa->kecamatan . '%');
+            $query->where('kecamatan', 'like', '%'.$siswa->kecamatan.'%');
         } else {
             // If no kecamatan, no schools are eligible
             $this->eligibleSekolahList = [];
             $this->showDetailModal = true;
+
             return;
         }
 
         // Match Desa (if available)
         if ($siswa->desa_kelurahan) {
             $query->where(function ($q) use ($siswa) {
-                $q->where('desa', 'like', '%' . $siswa->desa_kelurahan . '%')
+                $q->where('desa', 'like', '%'.$siswa->desa_kelurahan.'%')
                     ->orWhere('desa', '');
             });
         }
@@ -117,8 +119,8 @@ class EligibleSiswaDomisili extends Component
             ->with(['pesertaDidik', 'pesertaDidik.sekolah'])
             ->when($this->search, function ($query) {
                 $query->whereHas('pesertaDidik', function ($q) {
-                    $q->where('nama', 'like', '%' . $this->search . '%')
-                        ->orWhere('nisn', 'like', '%' . $this->search . '%');
+                    $q->where('nama', 'like', '%'.$this->search.'%')
+                        ->orWhere('nisn', 'like', '%'.$this->search.'%');
                 });
             })
             ->whereHas('pesertaDidik', function ($q) {
@@ -133,11 +135,11 @@ class EligibleSiswaDomisili extends Component
             $siswa = $pendaftaran->pesertaDidik;
             $count = 0;
             if ($siswa && $siswa->kecamatan) {
-                $query = ZonaDomisili::where('kecamatan', 'like', '%' . $siswa->kecamatan . '%');
+                $query = ZonaDomisili::where('kecamatan', 'like', '%'.$siswa->kecamatan.'%');
 
                 if ($siswa->desa_kelurahan) {
                     $query->where(function ($q) use ($siswa) {
-                        $q->where('desa', 'like', '%' . $siswa->desa_kelurahan . '%')
+                        $q->where('desa', 'like', '%'.$siswa->desa_kelurahan.'%')
                             ->orWhere('desa', '');
                     });
                 }
@@ -145,6 +147,7 @@ class EligibleSiswaDomisili extends Component
                 $count = $query->distinct('sekolah_id')->count('sekolah_id');
             }
             $pendaftaran->eligible_count = $count;
+
             return $pendaftaran;
         });
 

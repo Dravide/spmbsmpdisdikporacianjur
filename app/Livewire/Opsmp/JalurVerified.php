@@ -14,8 +14,11 @@ use Livewire\Component;
 class JalurVerified extends Component
 {
     public $jalurList = [];
+
     public $selectedJalurId = null;
+
     public $selectedJalur = null;
+
     public $verifiedStudents = [];
 
     public function mount()
@@ -33,7 +36,7 @@ class JalurVerified extends Component
             'pendaftarans' => function ($query) use ($sekolahId) {
                 $query->where('status', 'verified')
                     ->where('sekolah_menengah_pertama_id', $sekolahId);
-            }
+            },
         ])->get();
 
         // If no jalur selected but list exists, default to none (or could default to first)

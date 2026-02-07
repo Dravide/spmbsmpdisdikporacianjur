@@ -31,11 +31,11 @@ class Jadwal extends Model
 
         // If schedule doesn't exist, assume it's open (or closed depending on policy, typically safe to assume closed for strict features)
         // Let's assume CLOSED if not defined, to force admin configuration.
-        if (!$jadwal) {
+        if (! $jadwal) {
             return false;
         }
 
-        if (!$jadwal->aktif) {
+        if (! $jadwal->aktif) {
             return false;
         }
 
@@ -49,7 +49,7 @@ class Jadwal extends Model
     {
         $jadwal = self::where('keyword', $keyword)->first();
 
-        if (!$jadwal) {
+        if (! $jadwal) {
             return 'Jadwal belum ditentukan.';
         }
 
@@ -59,11 +59,11 @@ class Jadwal extends Model
 
         $now = now();
         if ($now->lessThan($jadwal->tanggal_mulai)) {
-            return 'Jadwal belum dibuka. Mulai tanggal ' . $jadwal->tanggal_mulai->translatedFormat('d F Y H:i');
+            return 'Jadwal belum dibuka. Mulai tanggal '.$jadwal->tanggal_mulai->translatedFormat('d F Y H:i');
         }
 
         if ($now->greaterThan($jadwal->tanggal_selesai)) {
-            return 'Jadwal sudah ditutup pada tanggal ' . $jadwal->tanggal_selesai->translatedFormat('d F Y H:i');
+            return 'Jadwal sudah ditutup pada tanggal '.$jadwal->tanggal_selesai->translatedFormat('d F Y H:i');
         }
 
         return 'Sedang berlangsung.';

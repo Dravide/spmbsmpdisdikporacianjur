@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 class PrintController extends Controller
 {
     public function cetakKartu($id)
@@ -28,8 +26,6 @@ class PrintController extends Controller
 
         $password = $siswa->tanggal_lahir ? $siswa->tanggal_lahir->format('Ymd') : '12345678';
 
-
-
         // Custom paper size: 165mm x 107.5mm (Landscape)
         // 165mm = 467.72 pt
         // 107.5mm = 304.72 pt
@@ -38,7 +34,7 @@ class PrintController extends Controller
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.kartu-siswa', [
             'siswa' => $siswa,
             'sekolah' => $sekolah,
-            'password' => $password
+            'password' => $password,
         ])->setPaper($customPaper, 'landscape');
 
         return $pdf->stream('kartu-peserta-' . $siswa->nisn . '.pdf');
@@ -69,7 +65,7 @@ class PrintController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.kartu-siswa-massal', [
             'siswas' => $siswas,
-            'sekolah' => $sekolah
+            'sekolah' => $sekolah,
         ])->setPaper($customPaper, 'landscape');
 
         return $pdf->stream('kartu-peserta-massal.pdf');
@@ -80,7 +76,7 @@ class PrintController extends Controller
         if (!$siswa->password) {
             $dob = $siswa->tanggal_lahir ? $siswa->tanggal_lahir->format('Ymd') : '12345678';
             $siswa->update([
-                'password' => \Illuminate\Support\Facades\Hash::make($dob)
+                'password' => \Illuminate\Support\Facades\Hash::make($dob),
             ]);
         }
     }
@@ -127,7 +123,7 @@ class PrintController extends Controller
         // Using BaconQrCode directly as it is installed
         $renderer = new \BaconQrCode\Renderer\ImageRenderer(
             new \BaconQrCode\Renderer\RendererStyle\RendererStyle(120),
-            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd
         );
         $writer = new \BaconQrCode\Writer($renderer);
         // Validasi URL or Data string
@@ -141,11 +137,12 @@ class PrintController extends Controller
             'pendaftaran' => $pendaftaran,
             'siswa' => $siswa,
             'sekolah' => $sekolah,
-            'qrCode' => $qrCodeBase64
+            'qrCode' => $qrCodeBase64,
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream('bukti-pendaftaran-' . $pendaftaran->nomor_pendaftaran . '.pdf');
     }
+
     public function cetakBuktiLulus($id)
     {
         $pendaftaran = \App\Models\Pendaftaran::with(['pesertaDidik', 'sekolah', 'jalur'])->findOrFail($id);
@@ -175,7 +172,7 @@ class PrintController extends Controller
         // Generate QR Code
         $renderer = new \BaconQrCode\Renderer\ImageRenderer(
             new \BaconQrCode\Renderer\RendererStyle\RendererStyle(120),
-            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd
         );
         $writer = new \BaconQrCode\Writer($renderer);
 
@@ -193,9 +190,46 @@ class PrintController extends Controller
             'sekolah' => $sekolah,
             'pengumuman' => $pengumuman,
             'qrCode' => $qrCodeBase64,
-            'jadwalDaftarUlang' => $jadwalDaftarUlang
+            'jadwalDaftarUlang' => $jadwalDaftarUlang,
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream('bukti-lulus-' . $pendaftaran->nomor_pendaftaran . '.pdf');
+    }
+
+    public function cetakDaftarHadir(\Illuminate\Http\Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->sekolah) {
+            abort(403, 'Sekolah tidak ditemukan.');
+        }
+
+        $sekolahId = $user->sekolah->sekolah_id;
+        $dateStart = $request->query('dateStart');
+        $dateEnd = $request->query('dateEnd');
+        $filterStatus = $request->query('filterStatus');
+
+        $query = \App\Models\DaftarUlang::where('sekolah_menengah_pertama_id', $sekolahId)
+            ->with(['pesertaDidik', 'pengumuman.jalur']);
+
+        if ($dateStart) {
+            $query->whereDate('tanggal', '>=', $dateStart);
+        }
+        if ($dateEnd) {
+            $query->whereDate('tanggal', '<=', $dateEnd);
+        }
+        if ($filterStatus) {
+            $query->where('status', $filterStatus);
+        }
+
+        $daftarUlangs = $query->orderBy('tanggal')->orderBy('nomor_urut')->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.daftar-hadir', [
+            'daftarUlangs' => $daftarUlangs,
+            'sekolah' => $user->sekolah,
+            'dateStart' => $dateStart,
+            'dateEnd' => $dateEnd,
+        ]);
+
+        return $pdf->stream('daftar-hadir-' . now()->format('Y-m-d') . '.pdf');
     }
 }

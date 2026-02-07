@@ -18,16 +18,24 @@ class ImportSekolahSD extends Component
     use WithFileUploads;
 
     public $file;
+
     public array $previewData = [];
+
     public bool $showPreview = false;
+
     public bool $generateAccounts = true;
 
     // Streaming Import Properties
     public $storedFilePath;
+
     public $lastProcessedLine = 0;
+
     public $importedCount = 0;
+
     public $totalToImport = 0;
+
     public $isImporting = false;
+
     public $importErrors = [];
 
     public function updatedFile()
@@ -44,8 +52,9 @@ class ImportSekolahSD extends Component
 
     protected function parseFilePreview()
     {
-        if (!file_exists($this->storedFilePath))
+        if (! file_exists($this->storedFilePath)) {
             return;
+        }
 
         $handle = fopen($this->storedFilePath, 'r');
 
@@ -67,26 +76,28 @@ class ImportSekolahSD extends Component
 
         // Preview first 50 lines
         while (($row = fgetcsv($handle, 0, $delimiter)) !== false && $count < 50) {
-            if (count($row) < 2)
+            if (count($row) < 2) {
                 continue;
+            }
 
-            if (!$header) {
+            if (! $header) {
                 // Remove BOM
                 $row[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $row[0]);
                 $header = array_map(function ($h) {
                     return strtolower(trim($h, " \t\n\r\0\x0B\""));
                 }, $row);
+
                 continue;
             }
 
             $rowData = [];
             foreach ($header as $index => $key) {
-                if (!empty($key) && isset($row[$index])) {
+                if (! empty($key) && isset($row[$index])) {
                     $rowData[$key] = trim($row[$index], '"');
                 }
             }
 
-            if (!empty($rowData['npsn'])) {
+            if (! empty($rowData['npsn'])) {
                 $data[] = $rowData;
                 $count++;
             }
@@ -96,7 +107,7 @@ class ImportSekolahSD extends Component
         $this->previewData = $data;
         $this->showPreview = count($this->previewData) > 0;
 
-        if (!$this->showPreview) {
+        if (! $this->showPreview) {
             $this->addError('file', 'Data tidak terbaca. Pastikan format CSV benar (Delimiter: | atau ; atau ,).');
         }
 
@@ -109,8 +120,9 @@ class ImportSekolahSD extends Component
 
     public function startImport()
     {
-        if (!$this->storedFilePath || !file_exists($this->storedFilePath)) {
+        if (! $this->storedFilePath || ! file_exists($this->storedFilePath)) {
             $this->dispatch('import-error', message: 'File import hilang. Silakan upload ulang.');
+
             return;
         }
 
@@ -122,8 +134,9 @@ class ImportSekolahSD extends Component
 
     public function processBatch($batchSize = 50)
     {
-        if (!$this->isImporting || !$this->storedFilePath) {
+        if (! $this->isImporting || ! $this->storedFilePath) {
             $this->isImporting = false;
+
             return;
         }
 
@@ -147,19 +160,22 @@ class ImportSekolahSD extends Component
 
         // Skip to where we left off
         while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
-            if (count($row) < 2)
+            if (count($row) < 2) {
                 continue;
+            }
 
-            if (!$header) {
+            if (! $header) {
                 $row[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $row[0]);
                 $header = array_map(function ($h) {
                     return strtolower(trim($h, " \t\n\r\0\x0B\""));
                 }, $row);
+
                 continue;
             }
 
             if ($currentLine < $this->importedCount) {
                 $currentLine++;
+
                 continue;
             }
 
@@ -169,7 +185,7 @@ class ImportSekolahSD extends Component
 
             $rowData = [];
             foreach ($header as $index => $key) {
-                if (!empty($key) && isset($row[$index])) {
+                if (! empty($key) && isset($row[$index])) {
                     $rowData[$key] = trim($row[$index], '"');
                 }
             }
@@ -197,8 +213,8 @@ class ImportSekolahSD extends Component
                         'desa_kelurahan' => $rowData['desa_kelurahan'] ?? null,
                         'rt' => $rowData['rt'] ?? null,
                         'rw' => $rowData['rw'] ?? null,
-                        'lintang' => !empty($rowData['lintang']) ? (float) $rowData['lintang'] : null,
-                        'bujur' => !empty($rowData['bujur']) ? (float) $rowData['bujur'] : null,
+                        'lintang' => ! empty($rowData['lintang']) ? (float) $rowData['lintang'] : null,
+                        'bujur' => ! empty($rowData['bujur']) ? (float) $rowData['bujur'] : null,
                     ]
                 );
 
@@ -206,9 +222,9 @@ class ImportSekolahSD extends Component
                 if ($this->generateAccounts) {
                     $existingUser = User::where('username', $rowData['npsn'])->first();
 
-                    if (!$existingUser) {
+                    if (! $existingUser) {
                         User::create([
-                            'name' => 'Operator ' . $rowData['npsn'],
+                            'name' => 'Operator '.$rowData['npsn'],
                             'username' => $rowData['npsn'],
                             'password' => Hash::make($rowData['npsn']),
                             'role' => 'opsd',
@@ -216,7 +232,7 @@ class ImportSekolahSD extends Component
                             'is_active' => true,
                         ]);
                     } else {
-                        if (!$existingUser->sekolah_id) {
+                        if (! $existingUser->sekolah_id) {
                             $existingUser->update(['sekolah_id' => $sekolah->sekolah_id]);
                         }
                     }
@@ -232,8 +248,9 @@ class ImportSekolahSD extends Component
         fclose($handle);
 
         $this->importedCount += $processedInBatch;
-        if ($this->totalToImport <= 0)
+        if ($this->totalToImport <= 0) {
             $this->totalToImport = 1;
+        }
         $progress = ($this->importedCount / $this->totalToImport) * 100;
 
         if ($processedInBatch < $batchSize) {
@@ -255,7 +272,6 @@ class ImportSekolahSD extends Component
         }
         $this->reset(['file', 'previewData', 'showPreview', 'storedFilePath']);
     }
-
 
     public function render()
     {

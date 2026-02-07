@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Dashboard;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.app')]
 #[Title('Dashboard Siswa - SPMB Disdikpora')]

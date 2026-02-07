@@ -3,8 +3,8 @@
 namespace App\Livewire\Auth;
 
 use App\Models\PesertaDidik;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -16,56 +16,83 @@ use Livewire\Component;
 class RegisterMandiri extends Component
 {
     public $step = 1;
+
     public $totalSteps = 6;
 
     // Step 1: Identitas Siswa
     public $nama;
+
     public $nisn;
+
     public $nik;
+
     public $jenis_kelamin;
+
     public $tempat_lahir;
+
     public $tanggal_lahir;
+
     public $kebutuhan_khusus;
 
     // Step 2: Data Orang Tua & Wali
     public $nama_ibu_kandung;
+
     public $pekerjaan_ibu;
+
     public $penghasilan_ibu;
 
     public $nama_ayah;
+
     public $pekerjaan_ayah;
+
     public $penghasilan_ayah;
 
     public $nama_wali;
+
     public $pekerjaan_wali;
+
     public $penghasilan_wali;
 
     // Step 3: Sekolah Asal
     public $sekolah_asal_text;
+
     public $npsn_sekolah_asal;
 
     // Step 4: Alamat & Kontak
     public $alamat_jalan;
+
     public $rt;
+
     public $rw;
+
     public $nama_dusun;
+
     public $desa_kelurahan;
+
     public $kecamatan;
+
     public $lintang;
+
     public $bujur;
+
     public $no_handphone;
 
     // Step 5: Data Tambahan (KIP/PKH)
     public $no_KIP;
+
     public $no_pkh;
+
     public $flag_pip; // Ya/Tidak
 
     // Step 6: Password
     public $password;
+
     public $password_confirmation;
 
     public $scheduleOpen = true;
+
     public $scheduleMessage = '';
+
     public $scheduleStartDate = null;
 
     public function mount()
@@ -73,7 +100,7 @@ class RegisterMandiri extends Component
         $this->scheduleOpen = \App\Models\Jadwal::isOpen('pendaftaran');
         $this->scheduleMessage = \App\Models\Jadwal::getMessage('pendaftaran');
 
-        if (!$this->scheduleOpen) {
+        if (! $this->scheduleOpen) {
             $jadwal = \App\Models\Jadwal::where('keyword', 'pendaftaran')->first();
             if ($jadwal && $jadwal->aktif && now()->lessThan($jadwal->tanggal_mulai)) {
                 $this->scheduleStartDate = $jadwal->tanggal_mulai->toISOString();
@@ -154,8 +181,9 @@ class RegisterMandiri extends Component
 
     public function register()
     {
-        if (!\App\Models\Jadwal::isOpen('pendaftaran')) {
+        if (! \App\Models\Jadwal::isOpen('pendaftaran')) {
             session()->flash('error', \App\Models\Jadwal::getMessage('pendaftaran'));
+
             return;
         }
 
@@ -216,8 +244,8 @@ class RegisterMandiri extends Component
             return redirect()->route('siswa.dashboard');
 
         } catch (\Exception $e) {
-            Log::error('Register Mandiri Error: ' . $e->getMessage());
-            session()->flash('error', 'Terjadi kesalahan saat pendaftaran: ' . $e->getMessage());
+            Log::error('Register Mandiri Error: '.$e->getMessage());
+            session()->flash('error', 'Terjadi kesalahan saat pendaftaran: '.$e->getMessage());
         }
     }
 

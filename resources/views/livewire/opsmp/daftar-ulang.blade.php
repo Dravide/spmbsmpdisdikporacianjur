@@ -9,12 +9,15 @@
                 data-bs-target="#generateModal">
                 <i class="fi fi-rr-calendar-clock me-1"></i> Generate Jadwal
             </button>
-            <button class="btn btn-info text-white waves-effect waves-light" wire:click="downloadDaftarHadir"
-                wire:loading.attr="disabled">
+            <a href="{{ route('opsmp.cetak-daftar-hadir', ['dateStart' => $dateStart, 'dateEnd' => $dateEnd, 'filterStatus' => $filterStatus]) }}"
+                target="_blank" class="btn btn-info text-white waves-effect waves-light">
                 <i class="fi fi-rr-print me-1"></i> Daftar Hadir
-            </button>
+            </a>
             <button class="btn btn-danger waves-effect waves-light" onclick="confirmResetData()">
                 <i class="fi fi-rr-trash me-1"></i> Reset Data
+            </button>
+            <button class="btn btn-secondary waves-effect waves-light" wire:click="openSettingsModal">
+                <i class="fi fi-rr-settings me-1"></i> Atur Persyaratan
             </button>
         </div>
     </div>
@@ -182,7 +185,10 @@
                 <div class="input-group input-group-sm" style="width: 200px;">
                     <span class="input-group-text bg-light border-end-0"><i class="fi fi-rr-search"></i></span>
                     <input type="text" class="form-control border-start-0 ps-0" placeholder="Cari Nama / NISN..."
-                        wire:model.live="search">
+                        wire:model.live="search" wire:loading.attr="disabled">
+                    <span class="input-group-text bg-light border-start-0" wire:loading>
+                        <span class="spinner-border spinner-border-sm"></span>
+                    </span>
                 </div>
                 <select class="form-select form-select-sm w-auto bg-light border-0" wire:model.live="filterStatus">
                     <option value="">Semua Status</option>
@@ -260,8 +266,10 @@
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             @if($data->status == 'belum')
                                                 <li>
-                                                    <button class="dropdown-item" wire:click="markAsSudah({{ $data->id }})">
-                                                        <i class="fi fi-rr-check text-success me-2"></i> Tandai Sudah
+                                                    <button class="dropdown-item"
+                                                        wire:click="openVerificationModal({{ $data->id }})">
+                                                        <i class="fi fi-rr-check text-success me-2"></i> Verifikasi & Tandai
+                                                        Sudah
                                                     </button>
                                                 </li>
                                             @else
@@ -295,10 +303,114 @@
             </div>
         </div>
     </div>
+
+    <!-- Verification Modal -->
+    <div class="modal fade" id="verificationModal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Verifikasi Dokumen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        wire:click="closeVerificationModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Verifikasi kelengkapan dokumen untuk siswa: <br><strong>{{ $studentName }}</strong>
+                    </p>
+
+                    @if(empty($verificationChecklist))
+                        <div class="alert alert-warning small">
+                            Belum ada persyaratan dokumen yang diatur oleh Admin.
+                        </div>
+                    @else
+                        <div class="list-group">
+                            @foreach($verificationChecklist as $label => $isChecked)
+                                <label class="list-group-item d-flex gap-2">
+                                    <input class="form-check-input flex-shrink-0" type="checkbox"
+                                        wire:model="verificationChecklist.{{ $label }}">
+                                    <span>
+                                        {{ $label }}
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="alert alert-info mt-3 small mb-0">
+                        <i class="fi fi-rr-info me-1"></i>
+                        Pastikan semua dokumen fisik telah diterima dan diverifikasi.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                        wire:click="closeVerificationModal">Batal</button>
+                    <button type="button" class="btn btn-success" wire:click="saveVerification"
+                        wire:loading.attr="disabled">
+                        <i class="fi fi-rr-check me-1"></i> Simpan & Validasi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Persyaratan Daftar Ulang (Sekolah)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        wire:click="closeSettingsModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Daftar Dokumen yang Harus Dibawa Siswa</label>
+                        <textarea class="form-control" rows="6" wire:model="syaratDaftarUlang"
+                            placeholder="Contoh:&#10;- Fotokopi Kartu Keluarga&#10;- Fotokopi Akta Kelahiran&#10;- Pas Foto 3x4 (2 Lembar)"></textarea>
+                        <div class="form-text">Tuliskan satu persyaratan per baris.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                        wire:click="closeSettingsModal">Batal</button>
+                    <button type="button" class="btn btn-primary" wire:click="saveSettings"
+                        wire:loading.attr="disabled">
+                        <i class="fi fi-rr-disk me-1"></i> Simpan Pengaturan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
     <script>
+        document.addEventListener('livewire:initialized', () => {
+            const modals = {};
+            const verificationModalEl = document.getElementById('verificationModal');
+            const settingsModalEl = document.getElementById('settingsModal');
+
+            if (verificationModalEl) modals['verificationModal'] = new bootstrap.Modal(verificationModalEl);
+            if (settingsModalEl) modals['settingsModal'] = new bootstrap.Modal(settingsModalEl);
+
+            Livewire.on('open-modal', (event) => {
+                let eventId = event.id;
+                if (!eventId && event[0]) eventId = event[0].id;
+
+                if (modals[eventId]) {
+                    modals[eventId].show();
+                }
+            });
+
+            Livewire.on('close-modal', (event) => {
+                let eventId = event.id;
+                if (!eventId && event[0]) eventId = event[0].id;
+
+                if (modals[eventId]) {
+                    modals[eventId].hide();
+                }
+            });
+        });
+
         function confirmResetData() {
             Swal.fire({
                 title: 'Apakah Anda yakin?',

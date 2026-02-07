@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Models\JalurPendaftaran;
 use App\Models\LoginSession;
 use App\Models\Pendaftaran;
 use App\Models\PesertaDidik;
 use App\Models\RoleSetting;
 use App\Models\SekolahMenengahPertama;
-use App\Models\JalurPendaftaran;
 use App\Models\User;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
@@ -57,6 +57,7 @@ class AdminDashboard extends Component
                 'count' => $count,
             ];
         }
+
         return $data;
     }
 

@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Livewire\Dashboard\OpsdDashboard;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', OpsdDashboard::class)->name('opsd.dashboard');
 

@@ -18,7 +18,7 @@ trait TwoFactorAuthenticatable
      */
     public function hasEnabledTwoFactorAuthentication()
     {
-        return !is_null($this->two_factor_secret) && !is_null($this->two_factor_confirmed_at);
+        return ! is_null($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
     }
 
     /**
@@ -53,11 +53,11 @@ trait TwoFactorAuthenticatable
         $svg = (new Writer(
             new ImageRenderer(
                 new RendererStyle(192, 0),
-                new SvgImageBackEnd()
+                new SvgImageBackEnd
             )
         ))->writeString(
-                $this->twoFactorQrCodeUrl()
-            );
+            $this->twoFactorQrCodeUrl()
+        );
 
         return trim(substr($svg, strpos($svg, "\n") + 1));
     }
@@ -70,6 +70,7 @@ trait TwoFactorAuthenticatable
     public function twoFactorQrCodeUrl()
     {
         $appName = config('app.name', 'SPMB Cianjur');
+
         return (new Google2FA)->getQRCodeUrl(
             $appName,
             $this->username ?? $this->name ?? 'User',

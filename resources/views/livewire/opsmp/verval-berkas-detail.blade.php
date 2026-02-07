@@ -122,8 +122,10 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">Daftar Berkas</h5>
         @if($pendaftaran->status != 'draft')
-            <button class="btn btn-success btn-sm" wire:click="approveAll">
-                <i class="fi fi-rr-check-double me-1"></i> Setujui Semua
+            <button class="btn btn-success btn-sm" wire:click="approveAll" wire:loading.attr="disabled">
+                <i class="fi fi-rr-check-double me-1" wire:loading.remove></i>
+                <span wire:loading.remove>Setujui Semua</span>
+                <span wire:loading>Memproses...</span>
             </button>
         @else
             <button class="btn btn-secondary btn-sm" disabled title="Pendaftaran masih draft">
@@ -168,38 +170,70 @@
                                             $formData = $item->form_data;
                                             $fieldDefs = collect($item->berkas->form_fields);
                                             $groupedDefs = $fieldDefs->groupBy('group');
+                                            $accordionId = 'accordion-' . $item->id;
                                         @endphp
 
-                                        <div class="mt-2 border-top pt-2">
+                                        <div class="accordion accordion-flush mt-2" id="{{ $accordionId }}">
                                             {{-- Ungrouped Fields --}}
-                                            @if($groupedDefs->has(''))
-                                                @foreach($groupedDefs[''] as $def)
-                                                    @php $key = $def['name']; @endphp
-                                                    @if(isset($formData[$key]))
-                                                        <div class="d-flex align-items-start small mt-1">
-                                                            <span class="text-muted me-1">{{ $def['label'] }}:</span>
-                                                            <span class="fw-medium text-dark">{{ $formData[$key] }}</span>
+                                            @if($groupedDefs->has('') && $groupedDefs['']->count() > 0)
+                                                @php $hasUngroupedData = $groupedDefs['']->some(fn($def) => isset($formData[$def['name']])); @endphp
+                                                @if($hasUngroupedData)
+                                                    <div class="accordion-item border-0">
+                                                        <h2 class="accordion-header">
+                                                            <button class="accordion-button collapsed py-2 px-2 bg-light" type="button" 
+                                                                data-bs-toggle="collapse" data-bs-target="#{{ $accordionId }}-general" 
+                                                                style="font-size: 0.8rem;">
+                                                                <i class="fi fi-rr-list me-1"></i> Data Umum
+                                                            </button>
+                                                        </h2>
+                                                        <div id="{{ $accordionId }}-general" class="accordion-collapse collapse" data-bs-parent="#{{ $accordionId }}">
+                                                            <div class="accordion-body py-2 px-2">
+                                                                @foreach($groupedDefs[''] as $def)
+                                                                    @php $key = $def['name']; @endphp
+                                                                    @if(isset($formData[$key]))
+                                                                        <div class="d-flex justify-content-between align-items-center small border-bottom py-1">
+                                                                            <span class="text-muted">{{ $def['label'] }}</span>
+                                                                            <span class="fw-bold text-dark">{{ $formData[$key] }}</span>
+                                                                        </div>
+                                                                    @endif
+                                                                @endforeach
+                                                            </div>
                                                         </div>
-                                                    @endif
-                                                @endforeach
+                                                    </div>
+                                                @endif
                                             @endif
 
                                             {{-- Grouped Fields --}}
                                             @foreach($groupedDefs as $groupName => $defs)
                                                 @if(!empty($groupName))
-                                                    <div class="mt-2 bg-light rounded p-2">
-                                                        <div class="fw-bold text-secondary border-bottom pb-1 mb-1"
-                                                            style="font-size: 0.75rem;">{{ $groupName }}</div>
-                                                        @foreach($defs as $def)
-                                                            @php $key = $def['name']; @endphp
-                                                            @if(isset($formData[$key]))
-                                                                <div class="d-flex justify-content-between align-items-center small mb-1">
-                                                                    <span class="text-muted">{{ $def['label'] }}</span>
-                                                                    <span class="fw-bold text-dark">{{ $formData[$key] }}</span>
+                                                    @php 
+                                                        $hasGroupData = $defs->some(fn($def) => isset($formData[$def['name']]));
+                                                        $groupSlug = Str::slug($groupName);
+                                                    @endphp
+                                                    @if($hasGroupData)
+                                                        <div class="accordion-item border-0">
+                                                            <h2 class="accordion-header">
+                                                                <button class="accordion-button collapsed py-2 px-2 bg-light" type="button" 
+                                                                    data-bs-toggle="collapse" data-bs-target="#{{ $accordionId }}-{{ $groupSlug }}" 
+                                                                    style="font-size: 0.8rem;">
+                                                                    <i class="fi fi-rr-folder me-1"></i> {{ $groupName }}
+                                                                </button>
+                                                            </h2>
+                                                            <div id="{{ $accordionId }}-{{ $groupSlug }}" class="accordion-collapse collapse" data-bs-parent="#{{ $accordionId }}">
+                                                                <div class="accordion-body py-2 px-2">
+                                                                    @foreach($defs as $def)
+                                                                        @php $key = $def['name']; @endphp
+                                                                        @if(isset($formData[$key]))
+                                                                            <div class="d-flex justify-content-between align-items-center small border-bottom py-1">
+                                                                                <span class="text-muted">{{ $def['label'] }}</span>
+                                                                                <span class="fw-bold text-dark">{{ $formData[$key] }}</span>
+                                                                            </div>
+                                                                        @endif
+                                                                    @endforeach
                                                                 </div>
-                                                            @endif
-                                                        @endforeach
-                                                    </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
                                                 @endif
                                             @endforeach
                                         </div>
@@ -232,15 +266,33 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
+                                    @php
+                                        // Prepare student data for KK verification
+                                        $studentInfo = [
+                                            'NIK' => $pendaftaran->pesertaDidik->nik ?? '-',
+                                            'No. KK' => $pendaftaran->pesertaDidik->no_kk ?? '-',
+                                            'Nama Siswa' => $pendaftaran->pesertaDidik->nama ?? '-',
+                                            'Tempat Lahir' => $pendaftaran->pesertaDidik->tempat_lahir ?? '-',
+                                            'Tanggal Lahir' => $pendaftaran->pesertaDidik->tanggal_lahir ? \Carbon\Carbon::parse($pendaftaran->pesertaDidik->tanggal_lahir)->format('d/m/Y') : '-',
+                                            'Nama Ibu Kandung' => $pendaftaran->pesertaDidik->nama_ibu_kandung ?? '-',
+                                            'Nama Ayah' => $pendaftaran->pesertaDidik->nama_ayah ?? '-',
+                                            'Alamat' => $pendaftaran->pesertaDidik->alamat_jalan ?? '-',
+                                            'Kecamatan' => $pendaftaran->pesertaDidik->kecamatan ?? '-',
+                                            'Desa/Kelurahan' => $pendaftaran->pesertaDidik->desa_kelurahan ?? '-',
+                                        ];
+                                    @endphp
                                     <button type="button" class="btn btn-sm btn-subtle-primary waves-effect waves-light"
-                                        onclick="openPdfPreview({{ json_encode(asset('storage/' . $item->file_path)) }}, {{ json_encode($item->berkas->nama ?? 'Berkas') }}, {{ json_encode($item->form_data) }}, {{ json_encode($item->berkas->form_fields ?? []) }})">
+                                        onclick="openPdfPreview({{ json_encode(asset('storage/' . $item->file_path)) }}, {{ json_encode($item->berkas->nama ?? 'Berkas') }}, {{ json_encode($item->form_data) }}, {{ json_encode($item->berkas->form_fields ?? []) }}, {{ json_encode($studentInfo) }})">
                                         <i class="fi fi-rr-eye me-1"></i> Lihat
                                     </button>
                                     @if($pendaftaran->status != 'draft')
                                         @if($item->status_berkas !== 'approved')
                                             <button class="btn btn-sm btn-subtle-success waves-effect waves-light"
-                                                wire:click="quickApprove({{ $item->id }})">
-                                                <i class="fi fi-rr-check me-1"></i> Setujui
+                                                wire:click="quickApprove({{ $item->id }})" wire:loading.attr="disabled"
+                                                wire:target="quickApprove({{ $item->id }})">
+                                                <i class="fi fi-rr-check me-1" wire:loading.remove></i>
+                                                <span wire:loading.remove>Setujui</span>
+                                                <span wire:loading><span class="spinner-border spinner-border-sm"></span></span>
                                             </button>
                                         @endif
                                         <button class="btn btn-sm btn-subtle-secondary waves-effect waves-light"
@@ -329,9 +381,19 @@
                         <!-- Metadata Side -->
                         <div class="col-md-3 border-end bg-light p-3 d-none" id="metaDataPanel"
                             style="height: 70vh; overflow-y: auto;">
-                            <h6 class="fw-bold mb-3 border-bottom pb-2 text-primary"><i
-                                    class="fi fi-rr-database me-2"></i>Data Input</h6>
-                            <div id="metaDataContent"></div>
+                            {{-- Student Data Card (for KK verification) --}}
+                            <div id="studentDataSection" class="d-none">
+                                <h6 class="fw-bold mb-2 border-bottom pb-2 text-success">
+                                    <i class="fi fi-rr-user me-2"></i>Data Siswa (Referensi)
+                                </h6>
+                                <div id="studentDataContent" class="mb-3"></div>
+                            </div>
+
+                            <div id="dataInputSection">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2 text-primary"><i
+                                        class="fi fi-rr-database me-2"></i>Data Input</h6>
+                                <div id="metaDataContent"></div>
+                            </div>
                         </div>
                         <!-- Viewer Side -->
                         <div class="col-md-12" id="viewerPanel" style="height: 70vh;">
@@ -355,7 +417,7 @@
     <script>
         let webViewerInstance = null;
 
-        function openPdfPreview(fileUrl, fileName, formData = null, formFields = []) {
+        function openPdfPreview(fileUrl, fileName, formData = null, formFields = [], studentData = null) {
             const modal = new bootstrap.Modal(document.getElementById('pdfPreviewModal'));
             document.getElementById('pdfPreviewTitle').textContent = fileName;
             document.getElementById('pdfDownloadLink').href = fileUrl;
@@ -364,38 +426,138 @@
             const metaPanel = document.getElementById('metaDataPanel');
             const viewerPanel = document.getElementById('viewerPanel');
             const metaContent = document.getElementById('metaDataContent');
+            const studentSection = document.getElementById('studentDataSection');
+            const studentContent = document.getElementById('studentDataContent');
+            const dataInputSection = document.getElementById('dataInputSection');
 
-            if (formData && Object.keys(formData).length > 0) {
+            // Check if should show sidebar (has form data or is KK-related document)
+            const isKKDocument = fileName.toLowerCase().includes('kartu keluarga') || fileName.toLowerCase().includes('kk');
+            const hasFormData = formData && Object.keys(formData).length > 0;
+            const showSidebar = hasFormData || isKKDocument;
+
+            if (showSidebar) {
                 // Show Sidebar
                 metaPanel.classList.remove('d-none');
                 viewerPanel.classList.remove('col-md-12');
                 viewerPanel.classList.add('col-md-9');
 
+                // For KK documents: hide Data Input, show Student Data only
+                if (isKKDocument) {
+                    dataInputSection.classList.add('d-none');
+                } else {
+                    dataInputSection.classList.remove('d-none');
+                }
+
                 let html = '';
 
-                // Map fields definition for labels
-                let fieldLabels = {};
-                if (formFields && Array.isArray(formFields)) {
-                    formFields.forEach(f => fieldLabels[f.name] = f.label);
+                // Group fields by their group property
+                if (formFields && Array.isArray(formFields) && formFields.length > 0) {
+                    // Build grouped structure
+                    const grouped = {};
+                    const ungrouped = [];
+
+                    formFields.forEach(field => {
+                        const groupName = field.group || '';
+                        const fieldData = {
+                            name: field.name,
+                            label: field.label,
+                            value: formData[field.name] || ''
+                        };
+
+                        if (groupName) {
+                            if (!grouped[groupName]) {
+                                grouped[groupName] = [];
+                            }
+                            grouped[groupName].push(fieldData);
+                        } else {
+                            ungrouped.push(fieldData);
+                        }
+                    });
+
+                    // Render ungrouped fields first
+                    if (ungrouped.length > 0) {
+                        ungrouped.forEach(field => {
+                            if (field.value) {
+                                html += `
+                                                                <div class="card card-body p-2 mb-2 border shadow-none bg-white">
+                                                                    <small class="text-muted d-block" style="font-size: 0.75rem;">${field.label}</small>
+                                                                    <span class="fw-bold text-dark text-break">${field.value}</span>
+                                                                </div>
+                                                            `;
+                            }
+                        });
+                    }
+
+                    // Render grouped fields
+                    for (const [groupName, fields] of Object.entries(grouped)) {
+                        const hasData = fields.some(f => f.value);
+                        if (hasData) {
+                            html += `
+                                                            <div class="card border shadow-none mb-3">
+                                                                <div class="card-header bg-primary text-white py-2 px-3" style="font-size: 0.85rem;">
+                                                                    <i class="fi fi-rr-folder me-1"></i>${groupName}
+                                                                </div>
+                                                                <div class="card-body p-2 bg-white">
+                                                        `;
+                            fields.forEach(field => {
+                                if (field.value) {
+                                    html += `
+                                                                    <div class="d-flex justify-content-between align-items-start border-bottom py-1 px-1" style="font-size: 0.8rem;">
+                                                                        <span class="text-muted">${field.label}</span>
+                                                                        <span class="fw-bold text-dark text-end ms-2" style="max-width: 60%;">${field.value}</span>
+                                                                    </div>
+                                                                `;
+                                }
+                            });
+                            html += `
+                                                                </div>
+                                                            </div>
+                                                        `;
+                        }
+                    }
+                } else {
+                    // Fallback: render without grouping
+                    for (const [key, value] of Object.entries(formData)) {
+                        if (value) {
+                            html += `
+                                                            <div class="card card-body p-2 mb-2 border shadow-none bg-white">
+                                                                <small class="text-muted d-block" style="font-size: 0.75rem;">${key}</small>
+                                                                <span class="fw-bold text-dark text-break">${value}</span>
+                                                            </div>
+                                                        `;
+                        }
+                    }
                 }
 
-                // Render Data
-                for (const [key, value] of Object.entries(formData)) {
-                    const label = fieldLabels[key] || key;
-                    html += `
-                                                                                    <div class="card card-body p-2 mb-2 border shadow-none bg-white">
-                                                                                        <small class="text-muted d-block" style="font-size: 0.75rem;">${label}</small>
-                                                                                        <span class="fw-bold text-dark text-break">${value}</span>
-                                                                                    </div>
-                                                                                `;
-                }
                 metaContent.innerHTML = html;
+
+                // Handle Student Data Section (ONLY for KK verification)
+                if (isKKDocument && studentData && Object.keys(studentData).length > 0) {
+                    studentSection.classList.remove('d-none');
+                    let studentHtml = '';
+                    for (const [label, value] of Object.entries(studentData)) {
+                        if (value && value !== '-') {
+                            studentHtml += `
+                                                <div class="d-flex justify-content-between align-items-start border-bottom py-1" style="font-size: 0.8rem;">
+                                                    <span class="text-muted">${label}</span>
+                                                    <span class="fw-bold text-dark text-end ms-2">${value}</span>
+                                                </div>
+                                            `;
+                        }
+                    }
+                    studentContent.innerHTML = studentHtml;
+                } else {
+                    studentSection.classList.add('d-none');
+                    studentContent.innerHTML = '';
+                }
             } else {
                 // Hide Sidebar (Full Width Viewer)
                 metaPanel.classList.add('d-none');
                 viewerPanel.classList.remove('col-md-9');
                 viewerPanel.classList.add('col-md-12');
                 metaContent.innerHTML = '';
+                studentSection.classList.add('d-none');
+                studentContent.innerHTML = '';
             }
             // -------------------------------
 
@@ -444,11 +606,11 @@
                 }).catch(err => {
                     console.error(err);
                     viewerElement.innerHTML = `
-                                                                                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-                                                                                    <i class="fi fi-rr-exclamation fs-1 mb-2"></i>
-                                                                                    <p>Gagal memuat PDF. <a href="${fileUrl}" target="_blank">Klik di sini untuk membuka file</a>.</p>
-                                                                                </div>
-                                                                            `;
+                                                                                                            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                                                                                                                <i class="fi fi-rr-exclamation fs-1 mb-2"></i>
+                                                                                                                <p>Gagal memuat PDF. <a href="${fileUrl}" target="_blank">Klik di sini untuk membuka file</a>.</p>
+                                                                                                            </div>
+                                                                                                        `;
                 });
             } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
                 // Clear viewer for image
@@ -459,10 +621,10 @@
 
                 // Display image directly
                 viewerElement.innerHTML = `
-                                                                            <div class="d-flex align-items-center justify-content-center h-100 bg-light">
-                                                                                <img src="${fileUrl}" alt="${fileName}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                                                                            </div>
-                                                                        `;
+                                                                                                        <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                                                                                                            <img src="${fileUrl}" alt="${fileName}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                                                                                        </div>
+                                                                                                    `;
             } else {
                 // Clear viewer for unsupported
                 viewerElement.innerHTML = '';
@@ -472,14 +634,14 @@
 
                 // Unsupported file type
                 viewerElement.innerHTML = `
-                                                                            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-                                                                                <i class="fi fi-rr-file fs-1 mb-2"></i>
-                                                                                <p>Preview tidak tersedia untuk jenis file ini.</p>
-                                                                                <a href="${fileUrl}" target="_blank" class="btn btn-outline-primary">
-                                                                                    <i class="fi fi-rr-download me-1"></i> Download File
-                                                                                </a>
-                                                                            </div>
-                                                                        `;
+                                                                                                        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                                                                                                            <i class="fi fi-rr-file fs-1 mb-2"></i>
+                                                                                                            <p>Preview tidak tersedia untuk jenis file ini.</p>
+                                                                                                            <a href="${fileUrl}" target="_blank" class="btn btn-outline-primary">
+                                                                                                                <i class="fi fi-rr-download me-1"></i> Download File
+                                                                                                            </a>
+                                                                                                        </div>
+                                                                                                    `;
             }
 
             modal.show();

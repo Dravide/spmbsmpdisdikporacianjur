@@ -18,13 +18,13 @@ class EnsureTwoFactorEnabled
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return $next($request);
         }
 
         // Check if role requires 2FA
         $roleSetting = RoleSetting::getByRole($user->role);
-        if (!$roleSetting || !$roleSetting->two_factor_required) {
+        if (! $roleSetting || ! $roleSetting->two_factor_required) {
             return $next($request);
         }
 
@@ -34,12 +34,12 @@ class EnsureTwoFactorEnabled
         }
 
         // Check if user has enabled 2FA
-        if (!$user->hasEnabledTwoFactorAuthentication()) {
+        if (! $user->hasEnabledTwoFactorAuthentication()) {
             return redirect()->route('two-factor.setup');
         }
 
         // Check if session is verified
-        if (!$request->session()->get('two_factor_verified')) {
+        if (! $request->session()->get('two_factor_verified')) {
             return redirect()->route('two-factor.challenge');
         }
 

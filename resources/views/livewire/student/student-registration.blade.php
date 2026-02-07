@@ -278,6 +278,56 @@
                                                             @endif
                                                         </td>
                                                     </tr>
+                                                    {{-- Display form_data if exists --}}
+                                                    @if(!empty($file->form_data) && !empty($file->berkas->form_fields))
+                                                        @php
+                                                            $formData = $file->form_data;
+                                                            $fieldDefs = collect($file->berkas->form_fields);
+                                                            $groupedDefs = $fieldDefs->groupBy('group');
+                                                        @endphp
+                                                        <tr class="bg-light">
+                                                            <td colspan="4" class="py-2 px-3">
+                                                                {{-- Ungrouped Fields --}}
+                                                                @if($groupedDefs->has(''))
+                                                                    <div class="d-flex flex-wrap gap-3 mb-2">
+                                                                        @foreach($groupedDefs[''] as $def)
+                                                                            @php $key = $def['name']; @endphp
+                                                                            @if(isset($formData[$key]) && $formData[$key])
+                                                                                <div class="small">
+                                                                                    <span class="text-muted">{{ $def['label'] }}:</span>
+                                                                                    <span class="fw-medium">{{ $formData[$key] }}</span>
+                                                                                </div>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </div>
+                                                                @endif
+
+                                                                {{-- Grouped Fields --}}
+                                                                <div class="row g-2">
+                                                                    @foreach($groupedDefs as $groupName => $defs)
+                                                                        @if(!empty($groupName))
+                                                                            <div class="col-md-6 col-lg-4">
+                                                                                <div class="bg-white rounded p-2 border h-100">
+                                                                                    <div class="fw-bold text-primary border-bottom pb-1 mb-2" style="font-size: 0.8rem;">
+                                                                                        <i class="fi fi-rr-folder me-1"></i>{{ $groupName }}
+                                                                                    </div>
+                                                                                    @foreach($defs as $def)
+                                                                                        @php $key = $def['name']; @endphp
+                                                                                        @if(isset($formData[$key]) && $formData[$key])
+                                                                                            <div class="d-flex justify-content-between align-items-center small mb-1">
+                                                                                                <span class="text-muted">{{ $def['label'] }}</span>
+                                                                                                <span class="fw-bold text-dark">{{ $formData[$key] }}</span>
+                                                                                            </div>
+                                                                                        @endif
+                                                                                    @endforeach
+                                                                                </div>
+                                                                            </div>
+                                                                        @endif
+                                                                    @endforeach
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endif
                                                 @endforeach
                                             </tbody>
                                         </table>

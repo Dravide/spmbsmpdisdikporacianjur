@@ -6,7 +6,6 @@ use App\Models\Jadwal;
 use App\Models\JalurPendaftaran;
 use App\Models\Pendaftaran;
 use App\Models\SekolahMenengahPertama;
-use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -35,7 +34,7 @@ class LandingPage extends Component
         return SekolahMenengahPertama::withCount([
             'pendaftarans' => function ($q) {
                 $q->where('status', '!=', 'ditolak');
-            }
+            },
         ])
             ->orderByDesc('pendaftarans_count')
             ->limit(6)
@@ -47,23 +46,23 @@ class LandingPage extends Component
         return [
             [
                 'question' => 'Apa saja syarat untuk mendaftar SPMB?',
-                'answer' => 'Calon peserta didik harus: 1) Lulusan SD/MI/sederajat tahun ini atau tahun sebelumnya, 2) Berusia maksimal 15 tahun pada tanggal 1 Juli tahun berjalan, 3) Memiliki NISN yang terdaftar di Dapodik, 4) Memiliki dokumen yang diperlukan (ijazah/SKL, KK, akta kelahiran).'
+                'answer' => 'Calon peserta didik harus: 1) Lulusan SD/MI/sederajat tahun ini atau tahun sebelumnya, 2) Berusia maksimal 15 tahun pada tanggal 1 Juli tahun berjalan, 3) Memiliki NISN yang terdaftar di Dapodik, 4) Memiliki dokumen yang diperlukan (ijazah/SKL, KK, akta kelahiran).',
             ],
             [
                 'question' => 'Bagaimana cara mendaftar secara online?',
-                'answer' => 'Kunjungi halaman pendaftaran, klik "Daftar Sekarang", isi data diri lengkap sesuai dokumen, upload berkas yang diperlukan, pilih sekolah tujuan dan jalur pendaftaran, lalu kirim formulir pendaftaran Anda.'
+                'answer' => 'Kunjungi halaman pendaftaran, klik "Daftar Sekarang", isi data diri lengkap sesuai dokumen, upload berkas yang diperlukan, pilih sekolah tujuan dan jalur pendaftaran, lalu kirim formulir pendaftaran Anda.',
             ],
             [
                 'question' => 'Jalur pendaftaran apa saja yang tersedia?',
-                'answer' => 'Tersedia beberapa jalur pendaftaran: 1) Jalur Zonasi berdasarkan domisili, 2) Jalur Afirmasi untuk pemegang KIP/PKH, 3) Jalur Prestasi untuk siswa berprestasi, 4) Jalur Perpindahan Orang Tua.'
+                'answer' => 'Tersedia beberapa jalur pendaftaran: 1) Jalur Zonasi berdasarkan domisili, 2) Jalur Afirmasi untuk pemegang KIP/PKH, 3) Jalur Prestasi untuk siswa berprestasi, 4) Jalur Perpindahan Orang Tua.',
             ],
             [
                 'question' => 'Kapan pengumuman hasil seleksi?',
-                'answer' => 'Pengumuman hasil seleksi akan diumumkan sesuai jadwal yang tertera di timeline. Hasil dapat dilihat langsung di portal siswa dengan login menggunakan NISN.'
+                'answer' => 'Pengumuman hasil seleksi akan diumumkan sesuai jadwal yang tertera di timeline. Hasil dapat dilihat langsung di portal siswa dengan login menggunakan NISN.',
             ],
             [
                 'question' => 'Bagaimana jika berkas ditolak?',
-                'answer' => 'Jika berkas ditolak, Anda akan mendapat notifikasi beserta alasan penolakan. Silakan perbaiki berkas sesuai catatan verifikator dan upload ulang sebelum batas waktu yang ditentukan.'
+                'answer' => 'Jika berkas ditolak, Anda akan mendapat notifikasi beserta alasan penolakan. Silakan perbaiki berkas sesuai catatan verifikator dan upload ulang sebelum batas waktu yang ditentukan.',
             ],
         ];
     }

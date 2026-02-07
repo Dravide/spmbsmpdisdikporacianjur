@@ -12,7 +12,7 @@ class NotificationBell extends Component
     {
         $user = auth()->user() ?? auth('siswa')->user();
 
-        if (!$user) {
+        if (! $user) {
             return collect();
         }
 
@@ -23,7 +23,7 @@ class NotificationBell extends Component
     {
         $user = auth()->user() ?? auth('siswa')->user();
 
-        if (!$user) {
+        if (! $user) {
             return 0;
         }
 
@@ -32,7 +32,7 @@ class NotificationBell extends Component
 
     public function toggleDropdown()
     {
-        $this->showDropdown = !$this->showDropdown;
+        $this->showDropdown = ! $this->showDropdown;
     }
 
     public function markAsRead($notificationId)

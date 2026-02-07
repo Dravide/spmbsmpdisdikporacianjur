@@ -6,7 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        commands: __DIR__ . '/../routes/console.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
             $rootDomain = env('ROOT_DOMAIN', 'spmbsmpdisdikporacianjur.local');
@@ -18,27 +18,27 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // Auth Domain
             Route::middleware('web')
-                ->domain('auth.' . $rootDomain)
+                ->domain('auth.'.$rootDomain)
                 ->group(base_path('routes/auth.php'));
 
             // Admin Domain
             Route::middleware(['web', 'auth', 'two-factor', 'role:admin'])
-                ->domain('admin.' . $rootDomain)
+                ->domain('admin.'.$rootDomain)
                 ->group(base_path('routes/admin.php'));
 
             // OPSMP Domain (Dash)
             Route::middleware(['web', 'auth', 'two-factor', 'role:opsmp'])
-                ->domain('dash.' . $rootDomain)
+                ->domain('dash.'.$rootDomain)
                 ->group(base_path('routes/opsmp.php'));
 
             // OPSD Domain (Operator)
             Route::middleware(['web', 'auth', 'two-factor', 'role:opsd'])
-                ->domain('operator.' . $rootDomain)
+                ->domain('operator.'.$rootDomain)
                 ->group(base_path('routes/opsd.php'));
 
             // Siswa Domain (Pendaftaran)
             Route::middleware(['web'])
-                ->domain('pendaftaran.' . $rootDomain)
+                ->domain('pendaftaran.'.$rootDomain)
                 ->group(base_path('routes/siswa.php'));
         },
     )

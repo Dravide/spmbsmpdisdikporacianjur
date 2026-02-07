@@ -13,7 +13,7 @@ trait LogsActivity
     {
         // Log created event
         static::created(function ($model) {
-            $model->logActivity('created', 'Membuat data ' . class_basename($model), [
+            $model->logActivity('created', 'Membuat data '.class_basename($model), [
                 'attributes' => $model->getAttributes(),
             ]);
         });
@@ -28,7 +28,7 @@ trait LogsActivity
             $changedFields = array_diff(array_keys($dirty), $skipFields);
 
             if (count($changedFields) > 0) {
-                $model->logActivity('updated', 'Mengubah data ' . class_basename($model), [
+                $model->logActivity('updated', 'Mengubah data '.class_basename($model), [
                     'old' => $original,
                     'new' => collect($dirty)->except($skipFields)->toArray(),
                 ]);
@@ -37,7 +37,7 @@ trait LogsActivity
 
         // Log deleted event
         static::deleted(function ($model) {
-            $model->logActivity('deleted', 'Menghapus data ' . class_basename($model), [
+            $model->logActivity('deleted', 'Menghapus data '.class_basename($model), [
                 'attributes' => $model->getAttributes(),
             ]);
         });

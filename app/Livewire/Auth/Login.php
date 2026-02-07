@@ -24,7 +24,9 @@ class Login extends Component
 
     // Force logout modal state
     public bool $showForceLogoutModal = false;
+
     public ?int $pendingUserId = null;
+
     public array $activeSessions = [];
 
     public function login()
@@ -32,11 +34,12 @@ class Login extends Component
         $this->validate();
 
         // Check rate limiting
-        $throttleKey = 'login:' . request()->ip();
+        $throttleKey = 'login:'.request()->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             $this->addError('username', "Terlalu banyak percobaan login. Coba lagi dalam {$seconds} detik.");
+
             return;
         }
 
@@ -45,15 +48,16 @@ class Login extends Component
             $user = Auth::guard('web')->user();
 
             // Check if user is active
-            if (!$user->is_active) {
+            if (! $user->is_active) {
                 Auth::logout();
                 $this->addError('username', 'Akun Anda telah dinonaktifkan. Hubungi administrator.');
+
                 return;
             }
 
             // Check location limit
             $ipAddress = request()->ip();
-            if (!$user->canLoginFromNewLocation($ipAddress)) {
+            if (! $user->canLoginFromNewLocation($ipAddress)) {
                 // Store pending login data and show modal
                 $this->pendingUserId = $user->id;
                 $this->activeSessions = $user->loginSessions()
@@ -64,6 +68,7 @@ class Login extends Component
                 $this->showForceLogoutModal = true;
 
                 Auth::logout();
+
                 return;
             }
 
@@ -108,16 +113,18 @@ class Login extends Component
      */
     public function forceLogoutAndLogin()
     {
-        if (!$this->pendingUserId) {
+        if (! $this->pendingUserId) {
             $this->showForceLogoutModal = false;
+
             return;
         }
 
         $user = \App\Models\User::find($this->pendingUserId);
 
-        if (!$user) {
+        if (! $user) {
             $this->resetForceLogoutState();
             $this->addError('username', 'User tidak ditemukan.');
+
             return;
         }
 
@@ -131,7 +138,7 @@ class Login extends Component
             ->toArray();
 
         // Delete from Laravel sessions table
-        if (!empty($sessionIds)) {
+        if (! empty($sessionIds)) {
             \Illuminate\Support\Facades\DB::table('sessions')
                 ->whereIn('id', $sessionIds)
                 ->delete();

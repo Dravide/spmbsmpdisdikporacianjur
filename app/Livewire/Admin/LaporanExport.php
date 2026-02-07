@@ -2,11 +2,10 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\JalurPendaftaran;
 use App\Models\Pendaftaran;
 use App\Models\PesertaDidik;
 use App\Models\SekolahMenengahPertama;
-use App\Models\JalurPendaftaran;
-use App\Models\DaftarUlang;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -17,10 +16,15 @@ use Maatwebsite\Excel\Facades\Excel;
 class LaporanExport extends Component
 {
     public $reportType = 'rekapitulasi';
+
     public $filterSekolah = '';
+
     public $filterJalur = '';
+
     public $filterStatus = '';
+
     public $startDate = '';
+
     public $endDate = '';
 
     public function mount()
@@ -67,7 +71,7 @@ class LaporanExport extends Component
 
     public function exportExcel()
     {
-        $filename = 'laporan_' . $this->reportType . '_' . now()->format('Y-m-d_His') . '.xlsx';
+        $filename = 'laporan_'.$this->reportType.'_'.now()->format('Y-m-d_His').'.xlsx';
 
         return Excel::download(
             new \App\Exports\LaporanExport($this->reportType, [

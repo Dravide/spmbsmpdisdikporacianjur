@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Admin\Jadwal;
 
-use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Jadwal;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class JadwalManager extends Component
 {
@@ -15,13 +15,25 @@ class JadwalManager extends Component
 
     #[Layout('layouts.app')]
     #[Title('Manajemen Jadwal SPMB')]
-
     public $search = '';
+
     public $perPage = 10;
 
     // Form Properties
-    public $label, $keyword, $tanggal_mulai, $tanggal_selesai, $aktif = true, $deskripsi;
+    public $label;
+
+    public $keyword;
+
+    public $tanggal_mulai;
+
+    public $tanggal_selesai;
+
+    public $aktif = true;
+
+    public $deskripsi;
+
     public $selectedId;
+
     public $isEdit = false;
 
     // Validation Rules
@@ -29,7 +41,7 @@ class JadwalManager extends Component
     {
         return [
             'label' => 'required|string|max:255',
-            'keyword' => 'required|string|max:255|unique:jadwals,keyword,' . $this->selectedId,
+            'keyword' => 'required|string|max:255|unique:jadwals,keyword,'.$this->selectedId,
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'deskripsi' => 'nullable|string',
@@ -41,14 +53,14 @@ class JadwalManager extends Component
     {
         $jadwals = Jadwal::query()
             ->where(function ($q) {
-                $q->where('label', 'like', '%' . $this->search . '%')
-                    ->orWhere('keyword', 'like', '%' . $this->search . '%');
+                $q->where('label', 'like', '%'.$this->search.'%')
+                    ->orWhere('keyword', 'like', '%'.$this->search.'%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 
         return view('livewire.admin.jadwal.jadwal-manager', [
-            'jadwals' => $jadwals
+            'jadwals' => $jadwals,
         ]);
     }
 
@@ -136,7 +148,7 @@ class JadwalManager extends Component
     public function toggleActive($id)
     {
         $jadwal = Jadwal::findOrFail($id);
-        $jadwal->update(['aktif' => !$jadwal->aktif]);
+        $jadwal->update(['aktif' => ! $jadwal->aktif]);
         $this->dispatch('swal:success', ['title' => 'Berhasil!', 'text' => 'Status jadwal diperbarui.']);
     }
 }

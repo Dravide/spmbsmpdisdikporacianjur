@@ -125,12 +125,6 @@
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
-                                            <li>
-                                                <button class="dropdown-item text-danger"
-                                                    onclick="confirmDelete('{{ $pendaftaran->id }}')">
-                                                    <i class="fi fi-rr-trash me-2"></i> Hapus
-                                                </button>
-                                            </li>
                                         </ul>
                                     </div>
                                 </td>
@@ -328,22 +322,5 @@
 </div>
 
 @push('scripts')
-    <script>
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: "Data pendaftaran ini akan dihapus permanen.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    @this.delete(id);
-                }
-            });
-        }
-    </script>
+
 @endpush

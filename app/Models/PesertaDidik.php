@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class PesertaDidik extends Authenticatable
@@ -85,14 +85,17 @@ class PesertaDidik extends Authenticatable
     {
         return false;
     }
+
     public function isOpsd()
     {
         return false;
     }
+
     public function isOpsmp()
     {
         return false;
     }
+
     public function isCmb()
     {
         return false;
@@ -142,6 +145,7 @@ class PesertaDidik extends Authenticatable
                 return true;
             }
         }
+
         return false;
     }
 
@@ -156,6 +160,7 @@ class PesertaDidik extends Authenticatable
                 $missing[] = $label;
             }
         }
+
         return $missing;
     }
 }

@@ -116,6 +116,32 @@
                             </div>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Jenis Tiket Bantuan Aktif</label>
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="row">
+                                        @if(isset($ticketTypes) && is_array($ticketTypes))
+                                            @foreach($ticketTypes as $key => $label)
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            wire:model="active_ticket_types" value="{{ $key }}"
+                                                            id="ticket_{{ $key }}">
+                                                        <label class="form-check-label"
+                                                            for="ticket_{{ $key }}">{{ $label }}</label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                    <div class="form-text mt-2 text-muted">Centang jenis tiket yang dapat diajukan oleh
+                                        Operator Sekolah.</div>
+                                </div>
+                            </div>
+                        </div>
+
+
                         <div class="d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary px-4">
                                 <i class="fi fi-rr-disk me-2"></i>Simpan Pengaturan

@@ -3,21 +3,18 @@
 namespace App\Exports;
 
 use App\Models\Pendaftaran;
-use App\Models\PesertaDidik;
-use App\Models\SekolahMenengahPertama;
-use App\Models\JalurPendaftaran;
-use App\Models\DaftarUlang;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class LaporanExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle, ShouldAutoSize
+class LaporanExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected $reportType;
+
     protected $filters;
 
     public function __construct($reportType, $filters = [])
@@ -30,19 +27,19 @@ class LaporanExport implements FromCollection, WithHeadings, WithMapping, WithSt
     {
         $query = Pendaftaran::with(['pesertaDidik', 'sekolah', 'jalur']);
 
-        if (!empty($this->filters['sekolah'])) {
+        if (! empty($this->filters['sekolah'])) {
             $query->where('sekolah_menengah_pertama_id', $this->filters['sekolah']);
         }
-        if (!empty($this->filters['jalur'])) {
+        if (! empty($this->filters['jalur'])) {
             $query->where('jalur_pendaftaran_id', $this->filters['jalur']);
         }
-        if (!empty($this->filters['status'])) {
+        if (! empty($this->filters['status'])) {
             $query->where('status', $this->filters['status']);
         }
-        if (!empty($this->filters['start_date'])) {
+        if (! empty($this->filters['start_date'])) {
             $query->whereDate('created_at', '>=', $this->filters['start_date']);
         }
-        if (!empty($this->filters['end_date'])) {
+        if (! empty($this->filters['end_date'])) {
             $query->whereDate('created_at', '<=', $this->filters['end_date']);
         }
 
@@ -92,7 +89,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithMapping, WithSt
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => [
                     'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '667eea']
+                    'startColor' => ['rgb' => '667eea'],
                 ],
             ],
         ];

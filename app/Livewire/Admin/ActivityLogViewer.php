@@ -15,8 +15,11 @@ class ActivityLogViewer extends Component
     use WithPagination;
 
     public $search = '';
+
     public $filterAction = '';
+
     public $filterType = '';
+
     public $filterDate = '';
 
     public function updatingSearch()
@@ -54,8 +57,8 @@ class ActivityLogViewer extends Component
             ->with('causer')
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
-                    $query->where('description', 'like', '%' . $this->search . '%')
-                        ->orWhere('ip_address', 'like', '%' . $this->search . '%');
+                    $query->where('description', 'like', '%'.$this->search.'%')
+                        ->orWhere('ip_address', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->filterAction, function ($q) {

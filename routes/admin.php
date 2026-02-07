@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Livewire\Dashboard\AdminDashboard;
-use App\Livewire\Settings\RoleSettings;
-use App\Livewire\Settings\ActiveSessions;
 use App\Livewire\Admin\DataSekolah;
 use App\Livewire\Admin\DataSekolahSMP;
+use App\Livewire\Dashboard\AdminDashboard;
+use App\Livewire\Settings\ActiveSessions;
+use App\Livewire\Settings\RoleSettings;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', AdminDashboard::class)->name('admin.dashboard');
 
@@ -29,4 +29,5 @@ Route::get('/daya-tampung', \App\Livewire\Admin\DataDayaTampung::class)->name('a
 Route::get('/data-admin', \App\Livewire\Admin\DataAdmin::class)->name('admin.data-admin');
 Route::get('/activity-log', \App\Livewire\Admin\ActivityLogViewer::class)->name('admin.activity-log');
 Route::get('/laporan', \App\Livewire\Admin\LaporanExport::class)->name('admin.laporan');
+Route::get('/tickets', \App\Livewire\Admin\TicketManager::class)->name('admin.tickets');
 Route::get('/peta-persebaran', \App\Livewire\Admin\PetaPersebaran::class)->name('admin.peta-persebaran');

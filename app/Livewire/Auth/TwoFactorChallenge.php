@@ -12,13 +12,16 @@ use Livewire\Component;
 class TwoFactorChallenge extends Component
 {
     public $code;
+
     public $recoveryCode;
+
     public $params = ['code', 'recoveryCode'];
+
     public $usingRecoveryCode = false;
 
     public function mount()
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
@@ -26,7 +29,7 @@ class TwoFactorChallenge extends Component
             return redirect()->route('dashboard');
         }
 
-        if (!Auth::user()->hasEnabledTwoFactorAuthentication()) {
+        if (! Auth::user()->hasEnabledTwoFactorAuthentication()) {
             return redirect()->route('two-factor.setup');
         }
     }
@@ -41,6 +44,7 @@ class TwoFactorChallenge extends Component
 
         if ($user->verifyTwoFactorCode($this->code)) {
             session()->put('two_factor_verified', true);
+
             return redirect()->route('dashboard');
         }
 
@@ -61,6 +65,7 @@ class TwoFactorChallenge extends Component
             $user->replaceRecoveryCodes(array_values($recoveryCodes));
 
             session()->put('two_factor_verified', true);
+
             return redirect()->route('dashboard');
         }
 
@@ -69,7 +74,7 @@ class TwoFactorChallenge extends Component
 
     public function toggleRecovery()
     {
-        $this->usingRecoveryCode = !$this->usingRecoveryCode;
+        $this->usingRecoveryCode = ! $this->usingRecoveryCode;
     }
 
     public function render()

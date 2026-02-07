@@ -13,6 +13,13 @@
         </div>
     @endif
 
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fi fi-rr-cross-circle me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <!-- Toolbar -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-3">
@@ -182,6 +189,9 @@
                                                     <i class="fi fi-rr-file-check me-2"></i> Verval
                                                 </a>
                                             </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
                                         </ul>
                                     </div>
                                 </td>
@@ -298,4 +308,5 @@
             </div>
         </div>
     @endif
+
 </div>

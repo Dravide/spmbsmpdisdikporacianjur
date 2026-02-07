@@ -11,7 +11,7 @@ Route::get('/', function () {
 
     if ($siteMode === 'maintenance') {
         // You can create a dedicated maintenance view or use abort(503)
-        // return view('errors.maintenance'); 
+        // return view('errors.maintenance');
         abort(503, 'Situs sedang dalam perbaikan.');
     }
 

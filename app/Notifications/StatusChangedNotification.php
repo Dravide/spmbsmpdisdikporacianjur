@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -12,8 +11,11 @@ class StatusChangedNotification extends Notification
     use Queueable;
 
     protected $title;
+
     protected $message;
+
     protected $type;
+
     protected $actionUrl;
 
     /**
@@ -49,7 +51,7 @@ class StatusChangedNotification extends Notification
     {
         $mail = (new MailMessage)
             ->subject($this->title)
-            ->greeting('Halo ' . ($notifiable->name ?? $notifiable->nama ?? 'Peserta') . '!')
+            ->greeting('Halo '.($notifiable->name ?? $notifiable->nama ?? 'Peserta').'!')
             ->line($this->message);
 
         if ($this->actionUrl) {
@@ -79,7 +81,7 @@ class StatusChangedNotification extends Notification
     {
         return new self(
             'Pendaftaran Berhasil',
-            'Pendaftaran Anda dengan nomor ' . $pendaftaran->nomor_pendaftaran . ' telah berhasil dikirim.',
+            'Pendaftaran Anda dengan nomor '.$pendaftaran->nomor_pendaftaran.' telah berhasil dikirim.',
             'success',
             route('siswa.pendaftaran')
         );
@@ -92,11 +94,11 @@ class StatusChangedNotification extends Notification
     {
         $messages = [
             'verified' => 'Berkas pendaftaran Anda telah diverifikasi.',
-            'rejected' => 'Berkas pendaftaran Anda ditolak. ' . ($note ?? 'Silakan periksa kembali.'),
+            'rejected' => 'Berkas pendaftaran Anda ditolak. '.($note ?? 'Silakan periksa kembali.'),
         ];
 
         return new self(
-            'Status Verifikasi: ' . ucfirst($status),
+            'Status Verifikasi: '.ucfirst($status),
             $messages[$status] ?? 'Status pendaftaran Anda telah diperbarui.',
             $status === 'verified' ? 'success' : 'warning',
             route('siswa.pendaftaran')
@@ -128,7 +130,7 @@ class StatusChangedNotification extends Notification
     {
         return new self(
             'Pengingat Daftar Ulang',
-            'Jangan lupa untuk melakukan daftar ulang sebelum ' . $deadline->format('d M Y H:i'),
+            'Jangan lupa untuk melakukan daftar ulang sebelum '.$deadline->format('d M Y H:i'),
             'warning',
             route('siswa.dashboard')
         );

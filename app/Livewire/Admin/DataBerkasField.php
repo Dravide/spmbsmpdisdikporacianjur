@@ -3,13 +3,14 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Berkas;
-use Livewire\Component;
 use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Title('Atur Form Input Berkas')]
 class DataBerkasField extends Component
 {
     public $berkas;
+
     public $formFields = [];
 
     public function mount($id)
@@ -48,7 +49,7 @@ class DataBerkasField extends Component
         if (isset($this->formFields[$index])) {
             $field = $this->formFields[$index];
             $field['label'] .= ' (Copy)';
-            $field['name'] .= '_copy_' . rand(100, 999); // Ensure uniqueness
+            $field['name'] .= '_copy_'.rand(100, 999); // Ensure uniqueness
 
             // Insert after current index
             array_splice($this->formFields, $index + 1, 0, [$field]);

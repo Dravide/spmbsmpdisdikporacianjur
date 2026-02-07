@@ -11,8 +11,11 @@ class SekolahDasar extends Model
     use HasFactory;
 
     protected $table = 'sekolah_dasar';
+
     protected $primaryKey = 'sekolah_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

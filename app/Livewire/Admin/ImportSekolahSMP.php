@@ -3,13 +3,11 @@
 namespace App\Livewire\Admin;
 
 use App\Models\SekolahMenengahPertama;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.app')]
 #[Title('Import Sekolah SMP')]
@@ -18,16 +16,24 @@ class ImportSekolahSMP extends Component
     use WithFileUploads;
 
     public $file;
+
     public array $previewData = [];
+
     public bool $showPreview = false;
+
     public bool $generateAccounts = false; // Default false for SMP
 
     // Streaming Import Properties
     public $storedFilePath;
+
     public $lastProcessedLine = 0;
+
     public $importedCount = 0;
+
     public $totalToImport = 0;
+
     public $isImporting = false;
+
     public $importErrors = [];
 
     public function updatedFile()
@@ -45,8 +51,9 @@ class ImportSekolahSMP extends Component
 
     protected function parseFilePreview()
     {
-        if (!file_exists($this->storedFilePath)) {
+        if (! file_exists($this->storedFilePath)) {
             $this->addError('file', 'File tidak ditemukan di server.');
+
             return;
         }
 
@@ -75,21 +82,23 @@ class ImportSekolahSMP extends Component
         // Preview first 50 lines
         while (($row = fgetcsv($handle, 0, $delimiter)) !== false && $count < 50) {
             // Allow single column if it's just header or weird format, but usually we need more
-            if (empty($row))
+            if (empty($row)) {
                 continue;
+            }
 
-            if (!$header) {
+            if (! $header) {
                 // Remove BOM
                 $row[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $row[0]);
                 $header = array_map(function ($h) {
                     return strtolower(trim($h, " \t\n\r\0\x0B\""));
                 }, $row);
+
                 continue;
             }
 
             $rowData = [];
             foreach ($header as $index => $key) {
-                if (!empty($key) && isset($row[$index])) {
+                if (! empty($key) && isset($row[$index])) {
                     $rowData[$key] = trim($row[$index], '"');
                 }
             }
@@ -103,7 +112,7 @@ class ImportSekolahSMP extends Component
         $this->previewData = $data;
         $this->showPreview = count($this->previewData) > 0;
 
-        if (!$this->showPreview) {
+        if (! $this->showPreview) {
             $this->addError('file', 'Data tidak terbaca. Pastikan format CSV benar (Delimiter: | atau ; atau ,).');
         }
 
@@ -116,8 +125,9 @@ class ImportSekolahSMP extends Component
 
     public function startImport()
     {
-        if (!$this->storedFilePath || !file_exists($this->storedFilePath)) {
+        if (! $this->storedFilePath || ! file_exists($this->storedFilePath)) {
             $this->dispatch('import-error', message: 'File import hilang. Silakan upload ulang.');
+
             return;
         }
 
@@ -129,8 +139,9 @@ class ImportSekolahSMP extends Component
 
     public function processBatch($batchSize = 50)
     {
-        if (!$this->isImporting || !$this->storedFilePath) {
+        if (! $this->isImporting || ! $this->storedFilePath) {
             $this->isImporting = false;
+
             return;
         }
 
@@ -154,19 +165,22 @@ class ImportSekolahSMP extends Component
 
         // Skip to where we left off
         while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
-            if (empty($row))
+            if (empty($row)) {
                 continue;
+            }
 
-            if (!$header) {
+            if (! $header) {
                 $row[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $row[0]);
                 $header = array_map(function ($h) {
                     return strtolower(trim($h, " \t\n\r\0\x0B\""));
                 }, $row);
+
                 continue;
             }
 
             if ($currentLine < $this->importedCount) {
                 $currentLine++;
+
                 continue;
             }
 
@@ -176,7 +190,7 @@ class ImportSekolahSMP extends Component
 
             $rowData = [];
             foreach ($header as $index => $key) {
-                if (!empty($key) && isset($row[$index])) {
+                if (! empty($key) && isset($row[$index])) {
                     $rowData[$key] = trim($row[$index], '"');
                 }
             }
@@ -203,8 +217,8 @@ class ImportSekolahSMP extends Component
                         'desa_kelurahan' => $rowData['desa_kelurahan'] ?? null,
                         'rt' => $rowData['rt'] ?? null,
                         'rw' => $rowData['rw'] ?? null,
-                        'lintang' => !empty($rowData['lintang']) ? (float) $rowData['lintang'] : null,
-                        'bujur' => !empty($rowData['bujur']) ? (float) $rowData['bujur'] : null,
+                        'lintang' => ! empty($rowData['lintang']) ? (float) $rowData['lintang'] : null,
+                        'bujur' => ! empty($rowData['bujur']) ? (float) $rowData['bujur'] : null,
                     ]
                 );
 
@@ -219,8 +233,9 @@ class ImportSekolahSMP extends Component
         fclose($handle);
 
         $this->importedCount += $processedInBatch;
-        if ($this->totalToImport <= 0)
+        if ($this->totalToImport <= 0) {
             $this->totalToImport = 1;
+        }
         $progress = ($this->importedCount / $this->totalToImport) * 100;
 
         if ($processedInBatch < $batchSize) {

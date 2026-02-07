@@ -39,7 +39,7 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -63,7 +63,7 @@ class AuthController extends Controller
 
         $user = \App\Models\User::find($request->user_id);
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')
                 ->with('error', 'User tidak ditemukan.');
         }
@@ -72,7 +72,7 @@ class AuthController extends Controller
         $sessionIds = $user->loginSessions()->pluck('session_id')->toArray();
 
         // Delete from Laravel sessions table
-        if (!empty($sessionIds)) {
+        if (! empty($sessionIds)) {
             \Illuminate\Support\Facades\DB::table('sessions')
                 ->whereIn('id', $sessionIds)
                 ->delete();

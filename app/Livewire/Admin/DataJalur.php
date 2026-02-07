@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\JalurPendaftaran;
 use App\Models\Berkas;
+use App\Models\JalurPendaftaran;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Title;
 
 #[Title('Data Jalur Pendaftaran')]
 class DataJalur extends Component
@@ -14,13 +14,28 @@ class DataJalur extends Component
     use WithPagination;
 
     public $search = '';
+
     public $perPage = 10;
 
     // Form fields
-    public $nama, $deskripsi, $aktif = true, $kuota, $start_date, $end_date;
+    public $nama;
+
+    public $deskripsi;
+
+    public $aktif = true;
+
+    public $kuota;
+
+    public $start_date;
+
+    public $end_date;
+
     public $selectedBerkas = []; // Array of Berkas IDs
+
     public $jalurId;
+
     public $isEditMode = false;
+
     public $showFormModal = false;
 
     protected $rules = [
@@ -87,7 +102,8 @@ class DataJalur extends Component
                 ->sum('kuota');
 
             if (($existingQuota + $this->kuota) > 100) {
-                $this->addError('kuota', 'Total kuota semua jalur aktif tidak boleh melebihi 100%. (Total saat ini: ' . $existingQuota . '%)');
+                $this->addError('kuota', 'Total kuota semua jalur aktif tidak boleh melebihi 100%. (Total saat ini: '.$existingQuota.'%)');
+
                 return;
             }
         }
@@ -120,7 +136,7 @@ class DataJalur extends Component
     {
         $jalurList = JalurPendaftaran::withCount('berkas')
             ->when($this->search, function ($query) {
-                $query->where('nama', 'like', '%' . $this->search . '%');
+                $query->where('nama', 'like', '%'.$this->search.'%');
             })
             ->latest()
             ->paginate($this->perPage);

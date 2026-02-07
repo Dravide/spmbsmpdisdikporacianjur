@@ -15,7 +15,7 @@ class ZonaDomisili extends Model
         'kecamatan',
         'desa',
         'rw',
-        'rt'
+        'rt',
     ];
 
     public function sekolah(): BelongsTo

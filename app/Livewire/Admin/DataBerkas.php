@@ -3,9 +3,9 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Berkas;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Title;
 
 #[Title('Data Berkas Persyaratan')]
 class DataBerkas extends Component
@@ -13,12 +13,24 @@ class DataBerkas extends Component
     use WithPagination;
 
     public $search = '';
+
     public $perPage = 10;
 
     // Form fields
-    public $nama, $deskripsi, $jenis = 'Berkas Umum', $is_required = true, $max_size_kb = 2048;
+    public $nama;
+
+    public $deskripsi;
+
+    public $jenis = 'Berkas Umum';
+
+    public $is_required = true;
+
+    public $max_size_kb = 2048;
+
     public $berkasId;
+
     public $isEditMode = false;
+
     public $showFormModal = false;
 
     // Validation rules
@@ -99,14 +111,14 @@ class DataBerkas extends Component
     {
         $berkas = Berkas::query()
             ->when($this->search, function ($query) {
-                $query->where('nama', 'like', '%' . $this->search . '%')
-                    ->orWhere('deskripsi', 'like', '%' . $this->search . '%');
+                $query->where('nama', 'like', '%'.$this->search.'%')
+                    ->orWhere('deskripsi', 'like', '%'.$this->search.'%');
             })
             ->latest()
             ->paginate($this->perPage);
 
         return view('livewire.admin.data-berkas', [
-            'berkasList' => $berkas
+            'berkasList' => $berkas,
         ]);
     }
 }

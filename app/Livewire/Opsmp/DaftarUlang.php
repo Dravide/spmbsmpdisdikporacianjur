@@ -16,22 +16,44 @@ class DaftarUlang extends Component
     use WithPagination;
 
     public $search = '';
+
     public $filterStatus = '';
+
     public $dateStart = '';
+
     public $dateEnd = '';
 
     // Generation Properties
     public $generateMode = 'auto'; // auto, jalur, sesi
+
     public $generateDateStart;
+
     public $generateDays = 3;
+
     public $generateTimeStart = '08:00';
+
     public $generateTimeEnd = '14:00';
+
     public $generateLocation = 'Kampus SMP';
+
     public $generateJalurSettings = []; // [jalur_id => date]
+
     public $generateSessions = [
         ['start' => '08:00', 'end' => '10:00'],
-        ['start' => '10:00', 'end' => '12:00']
+        ['start' => '08:00', 'end' => '10:00'],
+        ['start' => '10:00', 'end' => '12:00'],
     ];
+
+    // Verification Modal
+    public $showVerificationModal = false;
+    public $selectedDaftarUlangId;
+    public $verificationChecklist = []; // [ 'Label' => true/false ]
+    public $studentName;
+    public $verificationNotes;
+
+    // Settings Modal
+    public $showSettingsModal = false;
+    public $syaratDaftarUlang = '';
 
     public function mount()
     {
@@ -41,25 +63,153 @@ class DaftarUlang extends Component
         foreach ($jalurs as $jalur) {
             $this->generateJalurSettings[$jalur->id] = $this->generateDateStart;
         }
+
+        // Load school specific requirements
+        if (Auth::check() && Auth::user()->sekolah) {
+            $this->syaratDaftarUlang = Auth::user()->sekolah->syarat_daftar_ulang;
+        }
     }
 
-    public function addSession()
+    public function openSettingsModal()
     {
-        $this->generateSessions[] = ['start' => '08:00', 'end' => '10:00'];
+        if (Auth::check() && Auth::user()->sekolah) {
+            $this->syaratDaftarUlang = Auth::user()->sekolah->syarat_daftar_ulang;
+        }
+        $this->showSettingsModal = true;
+        $this->dispatch('open-modal', ['id' => 'settingsModal']);
     }
 
-    public function removeSession($index)
+    public function closeSettingsModal()
     {
-        unset($this->generateSessions[$index]);
-        $this->generateSessions = array_values($this->generateSessions);
+        $this->showSettingsModal = false;
+        $this->dispatch('close-modal', ['id' => 'settingsModal']);
+    }
+
+    public function saveSettings()
+    {
+        $user = Auth::user();
+        if (!$user || !$user->sekolah)
+            return;
+
+        $user->sekolah->update([
+            'syarat_daftar_ulang' => $this->syaratDaftarUlang
+        ]);
+
+        $this->dispatch('swal:toast', [
+            'type' => 'success',
+            'title' => 'Tersimpan',
+            'text' => 'Persyaratan daftar ulang berhasil disimpan.',
+        ]);
+
+        $this->closeSettingsModal();
+    }
+
+    public function openVerificationModal($id)
+    {
+        $this->selectedDaftarUlangId = $id;
+        $daftarUlang = DaftarUlangModel::with('pesertaDidik')->find($id);
+
+        if (!$daftarUlang)
+            return;
+
+        $this->studentName = $daftarUlang->pesertaDidik->nama;
+
+        // Load School Requirements (ignore global)
+        $user = Auth::user();
+        $schoolReqs = ($user && $user->sekolah) ? $user->sekolah->syarat_daftar_ulang : '';
+
+        $requirements = [];
+
+        if ($schoolReqs) {
+            $lines = explode("\n", $schoolReqs);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (!empty($line)) {
+                    // Remove leading dash/bullet if present
+                    $cleanLine = ltrim($line, "-• ");
+                    $requirements[$cleanLine] = false;
+                }
+            }
+        }
+
+        // Merge with existing saved state if any
+        if (!empty($daftarUlang->checklist_dokumen)) {
+            foreach ($daftarUlang->checklist_dokumen as $key => $val) {
+                if (isset($requirements[$key])) {
+                    $requirements[$key] = $val;
+                } else {
+                    // Keep old keys just in case requirements changed
+                }
+            }
+        }
+
+        // If no requirements configured, maybe add default?
+        if (empty($requirements)) {
+            $requirements['Dokumen Lengkap'] = false;
+        }
+
+        $this->verificationChecklist = $requirements;
+        $this->showVerificationModal = true;
+
+        $this->dispatch('open-modal', ['id' => 'verificationModal']);
+    }
+
+    public function closeVerificationModal()
+    {
+        $this->showVerificationModal = false;
+        $this->reset(['selectedDaftarUlangId', 'verificationChecklist', 'studentName']);
+        $this->dispatch('close-modal', ['id' => 'verificationModal']);
+    }
+
+    public function saveVerification()
+    {
+        $daftarUlang = DaftarUlangModel::find($this->selectedDaftarUlangId);
+        if (!$daftarUlang)
+            return;
+
+        // Check if all checked? Or just save state?
+        // User: "Jika semua (atau yang wajib) terpenuhi, status berubah jadi 'Sudah'"
+        // Let's assume all listed are mandatory for now.
+
+        $allChecked = !in_array(false, $this->verificationChecklist);
+
+        $daftarUlang->update([
+            'checklist_dokumen' => $this->verificationChecklist,
+            'status' => $allChecked ? 'sudah' : 'belum',
+        ]);
+
+        if ($allChecked) {
+            $this->dispatch('swal:toast', [
+                'type' => 'success',
+                'title' => 'Verifikasi Berhasil',
+                'text' => 'Status siswa diperbarui menjadi SUDAH daftar ulang.',
+            ]);
+        } else {
+            $this->dispatch('swal:toast', [
+                'type' => 'info',
+                'title' => 'Disimpan',
+                'text' => 'Checklist disimpan. Status masih BELUM lengkap.',
+            ]);
+        }
+
+        $this->closeVerificationModal();
+    }
+
+    public function markAsBelum($id)
+    {
+        $daftarUlang = DaftarUlangModel::find($id);
+        if ($daftarUlang) {
+            $daftarUlang->update(['status' => 'belum', 'checklist_dokumen' => null]);
+            $this->dispatch('swal:toast', [
+                'type' => 'info',
+                'title' => 'Status Diubah',
+                'text' => 'Status siswa diubah menjadi BELUM daftar ulang.',
+            ]);
+        }
     }
 
     public function generateSchedule()
     {
-        $user = Auth::user();
-        if (!$user)
-            return;
-
         // Validation
         if ($this->generateMode == 'auto') {
             $this->validate([
@@ -80,261 +230,143 @@ class DaftarUlang extends Component
             ]);
         }
 
-        // Get students who passed
-        $lulusStudents = \App\Models\Pengumuman::where('sekolah_menengah_pertama_id', $user->sekolah_id)
-            ->where('status', 'lulus')
-            ->get();
-
-        if ($lulusStudents->isEmpty()) {
-            $this->dispatch('swal:modal', [
-                'type' => 'warning',
-                'title' => 'Tidak Ada Data',
-                'text' => 'Belum ada siswa yang dinyatakan lulus.',
-            ]);
+        $user = Auth::user();
+        if (!$user || !$user->sekolah) {
+            $this->dispatch('swal:toast', ['type' => 'error', 'title' => 'Error', 'text' => 'Sekolah tidak ditemukan.']);
             return;
         }
 
-        // Delete existing schedule
-        DaftarUlangModel::where('sekolah_menengah_pertama_id', $user->sekolah_id)->delete();
+        $sekolahId = $user->sekolah->sekolah_id;
+
+        // Delete existing schedules for this school
+        DaftarUlangModel::where('sekolah_menengah_pertama_id', $sekolahId)->delete();
+
+        // Get all LULUS students for this school
+        $pengumumans = \App\Models\Pengumuman::where('sekolah_menengah_pertama_id', $sekolahId)
+            ->where('status', 'Lulus')
+            ->with('pesertaDidik')
+            ->get();
+
+        if ($pengumumans->isEmpty()) {
+            $this->dispatch('swal:toast', ['type' => 'warning', 'title' => 'Tidak ada data', 'text' => 'Tidak ada siswa LULUS untuk di-generate.']);
+            return;
+        }
+
+        $nomorUrut = 1;
 
         if ($this->generateMode == 'auto') {
-            $totalStudents = $lulusStudents->count();
-            $studentsPerDay = ceil($totalStudents / $this->generateDays);
-
+            $studentsPerDay = ceil($pengumumans->count() / $this->generateDays);
             $currentDate = \Carbon\Carbon::parse($this->generateDateStart);
-            $studentCount = 0;
-            $nomorUrut = 1;
+            $dayCounter = 0;
 
-            foreach ($lulusStudents as $student) {
-                if ($studentCount >= $studentsPerDay) {
+            foreach ($pengumumans as $index => $pengumuman) {
+                if ($index > 0 && $index % $studentsPerDay == 0) {
                     $currentDate->addDay();
-                    $studentCount = 0;
-                }
-
-                $this->createSchedule($user->sekolah_id, $student, $currentDate->format('Y-m-d'), null, null, $nomorUrut);
-                $studentCount++;
-                $nomorUrut++;
-            }
-        } elseif ($this->generateMode == 'jalur') {
-            $nomorUrut = 1;
-            foreach ($lulusStudents as $student) {
-                $jalurId = $student->jalur_pendaftaran_id;
-                $date = $this->generateJalurSettings[$jalurId] ?? $this->generateDateStart;
-
-                $this->createSchedule($user->sekolah_id, $student, $date, null, null, $nomorUrut);
-                $nomorUrut++;
-            }
-        } elseif ($this->generateMode == 'sesi') {
-            $totalStudents = $lulusStudents->count();
-            $slotsPerDay = count($this->generateSessions);
-            $totalSlots = $this->generateDays * $slotsPerDay;
-            $studentsPerSlot = ceil($totalStudents / $totalSlots);
-
-            $currentDate = \Carbon\Carbon::parse($this->generateDateStart);
-            $studentCount = 0;
-            $currentSessionIndex = 0;
-            $nomorUrut = 1;
-
-            foreach ($lulusStudents as $student) {
-                if ($studentCount >= $studentsPerSlot) {
-                    // Move to next slot
-                    $studentCount = 0;
-                    $currentSessionIndex++;
-
-                    // If sessions for the day are exhausted, move to next day
-                    if ($currentSessionIndex >= $slotsPerDay) {
-                        $currentDate->addDay();
-                        $currentSessionIndex = 0;
+                    $dayCounter++;
+                    if ($dayCounter >= $this->generateDays) {
+                        $currentDate = \Carbon\Carbon::parse($this->generateDateStart)->addDays($this->generateDays - 1);
                     }
                 }
 
-                $session = $this->generateSessions[$currentSessionIndex];
+                DaftarUlangModel::create([
+                    'sekolah_menengah_pertama_id' => $sekolahId,
+                    'pengumuman_id' => $pengumuman->id,
+                    'peserta_didik_id' => $pengumuman->peserta_didik_id,
+                    'tanggal' => $currentDate->format('Y-m-d'),
+                    'waktu_mulai' => $this->generateTimeStart,
+                    'waktu_selesai' => $this->generateTimeEnd,
+                    'lokasi' => $this->generateLocation,
+                    'status' => 'belum',
+                    'nomor_urut' => $nomorUrut++,
+                ]);
+            }
+        } elseif ($this->generateMode == 'jalur') {
+            foreach ($pengumumans as $pengumuman) {
+                $jalurId = $pengumuman->jalur_id;
+                $tanggal = $this->generateJalurSettings[$jalurId] ?? $this->generateDateStart;
 
-                $this->createSchedule(
-                    $user->sekolah_id,
-                    $student,
-                    $currentDate->format('Y-m-d'),
-                    $session['start'],
-                    $session['end'],
-                    $nomorUrut
-                );
+                DaftarUlangModel::create([
+                    'sekolah_menengah_pertama_id' => $sekolahId,
+                    'pengumuman_id' => $pengumuman->id,
+                    'peserta_didik_id' => $pengumuman->peserta_didik_id,
+                    'tanggal' => $tanggal,
+                    'waktu_mulai' => $this->generateTimeStart,
+                    'waktu_selesai' => $this->generateTimeEnd,
+                    'lokasi' => $this->generateLocation,
+                    'status' => 'belum',
+                    'nomor_urut' => $nomorUrut++,
+                ]);
+            }
+        } elseif ($this->generateMode == 'sesi') {
+            $totalSlots = $this->generateDays * count($this->generateSessions);
+            $studentsPerSlot = ceil($pengumumans->count() / $totalSlots);
 
-                $studentCount++;
-                $nomorUrut++;
+            $studentIndex = 0;
+            for ($day = 0; $day < $this->generateDays; $day++) {
+                $currentDate = \Carbon\Carbon::parse($this->generateDateStart)->addDays($day);
+                foreach ($this->generateSessions as $session) {
+                    for ($i = 0; $i < $studentsPerSlot && $studentIndex < $pengumumans->count(); $i++) {
+                        $pengumuman = $pengumumans[$studentIndex];
+                        DaftarUlangModel::create([
+                            'sekolah_menengah_pertama_id' => $sekolahId,
+                            'pengumuman_id' => $pengumuman->id,
+                            'peserta_didik_id' => $pengumuman->peserta_didik_id,
+                            'tanggal' => $currentDate->format('Y-m-d'),
+                            'waktu_mulai' => $session['start'],
+                            'waktu_selesai' => $session['end'],
+                            'lokasi' => $this->generateLocation,
+                            'status' => 'belum',
+                            'nomor_urut' => $nomorUrut++,
+                        ]);
+                        $studentIndex++;
+                    }
+                }
             }
         }
 
-        $this->dispatch('swal:modal', [
+        $this->dispatch('swal:toast', [
             'type' => 'success',
-            'title' => 'Berhasil!',
-            'text' => 'Jadwal daftar ulang berhasil digenerate.',
+            'title' => 'Berhasil',
+            'text' => 'Jadwal daftar ulang berhasil di-generate untuk ' . $pengumumans->count() . ' siswa.',
         ]);
 
         $this->dispatch('close-modal', ['id' => 'generateModal']);
-        $this->dispatch('refresh');
+    }
+
+    public function addSession()
+    {
+        $this->generateSessions[] = ['start' => '08:00', 'end' => '10:00'];
+    }
+
+    public function removeSession($index)
+    {
+        unset($this->generateSessions[$index]);
+        $this->generateSessions = array_values($this->generateSessions);
     }
 
     public function resetData()
     {
         $user = Auth::user();
-        if (!$user)
+        if (!$user || !$user->sekolah)
             return;
 
-        DaftarUlangModel::where('sekolah_menengah_pertama_id', $user->sekolah_id)->delete();
+        DaftarUlangModel::where('sekolah_menengah_pertama_id', $user->sekolah->sekolah_id)->delete();
 
-        $this->dispatch('swal:modal', [
+        $this->dispatch('swal:toast', [
             'type' => 'success',
-            'title' => 'Berhasil!',
-            'text' => 'Semua jadwal daftar ulang berhasil dihapus.',
+            'title' => 'Berhasil',
+            'text' => 'Semua data jadwal daftar ulang telah dihapus.',
         ]);
-
-        $this->dispatch('refresh');
-    }
-
-    private function createSchedule($sekolahId, $student, $date, $startTime = null, $endTime = null, $nomorUrut = null)
-    {
-        DaftarUlangModel::create([
-            'sekolah_menengah_pertama_id' => $sekolahId,
-            'pengumuman_id' => $student->id,
-            'peserta_didik_id' => $student->peserta_didik_id,
-            'tanggal' => $date,
-            'waktu_mulai' => $startTime ?? $this->generateTimeStart,
-            'waktu_selesai' => $endTime ?? $this->generateTimeEnd,
-            'lokasi' => $this->generateLocation,
-            'status' => 'belum',
-            'nomor_urut' => $nomorUrut,
-        ]);
-    }
-
-    public function markAsSudah($id)
-    {
-        $data = DaftarUlangModel::find($id);
-        if ($data) {
-            $data->update(['status' => 'sudah']);
-            $this->dispatch('swal:toast', [
-                'type' => 'success',
-                'title' => 'Status diperbarui',
-                'text' => 'Siswa ditandai sudah daftar ulang.'
-            ]);
-        }
-    }
-
-    public function markAsBelum($id)
-    {
-        $data = DaftarUlangModel::find($id);
-        if ($data) {
-            $data->update(['status' => 'belum']);
-            $this->dispatch('swal:toast', [
-                'type' => 'info',
-                'title' => 'Status diperbarui',
-                'text' => 'Status daftar ulang dikembalikan.'
-            ]);
-        }
-    }
-
-    public function downloadDaftarHadir()
-    {
-        $user = Auth::user();
-        if (!$user)
-            return;
-
-        $query = DaftarUlangModel::with(['pesertaDidik.sekolah', 'pengumuman.jalur', 'pengumuman.pendaftaran'])
-            ->where('sekolah_menengah_pertama_id', $user->sekolah_id);
-
-        if ($this->search) {
-            $query->whereHas('pesertaDidik', function ($q) {
-                $q->where('nama', 'like', '%' . $this->search . '%')
-                    ->orWhere('nisn', 'like', '%' . $this->search . '%');
-            });
-        }
-
-        if ($this->filterStatus) {
-            $query->where('status', $this->filterStatus);
-        }
-
-        if ($this->dateStart) {
-            $query->whereDate('tanggal', '>=', $this->dateStart);
-        }
-
-        if ($this->dateEnd) {
-            $query->whereDate('tanggal', '<=', $this->dateEnd);
-        }
-
-        $items = $query->orderBy('tanggal', 'asc')
-            ->orderBy('waktu_mulai', 'asc')
-            ->orderBy('nomor_urut', 'asc')
-            ->get();
-
-        if ($items->isEmpty()) {
-            $this->dispatch('swal:modal', [
-                'type' => 'warning',
-                'title' => 'Data Kosong',
-                'text' => 'Tidak ada data untuk dicetak sesuai filter yang dipilih.'
-            ]);
-            return;
-        }
-
-        // Setup QR Code Renderer
-        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
-            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(120),
-            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
-        );
-        $writer = new \BaconQrCode\Writer($renderer);
-
-        $groupedData = $items->groupBy(function ($item) {
-            return $item->tanggal;
-        })->map(function ($dateGroup) {
-            return $dateGroup->groupBy(function ($item) {
-                return $item->waktu_mulai . ' - ' . $item->waktu_selesai;
-            });
-        });
-
-        $finalData = [];
-        foreach ($groupedData as $date => $timeGroups) {
-            foreach ($timeGroups as $timeRange => $timeItems) {
-                $sessionData = [];
-                foreach ($timeItems as $item) {
-                    $nomorPeserta = $item->pengumuman->pendaftaran->nomor_pendaftaran ?? $item->pesertaDidik->nisn;
-
-                    // Generate QR Code
-                    $qrContent = $nomorPeserta;
-                    $qrCode = $writer->writeString($qrContent);
-                    $qrCodeBase64 = base64_encode($qrCode);
-
-                    $sessionData[] = [
-                        'nomor_peserta' => $nomorPeserta,
-                        'nama' => $item->pesertaDidik->nama,
-                        'asal_sekolah' => $item->pesertaDidik->sekolah->nama ?? 'Umum',
-                        'jalur' => $item->pengumuman->jalur->nama ?? '-',
-                        'qr_code' => $qrCodeBase64
-                    ];
-                }
-                $finalData[$date][$timeRange] = $sessionData;
-            }
-        }
-
-        $sekolah = $user->sekolah;
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('print.daftar-hadir-daftar-ulang', [
-            'groupedData' => $finalData,
-            'sekolah' => $sekolah,
-            'filterDateStart' => $this->dateStart,
-            'filterDateEnd' => $this->dateEnd,
-        ])->setPaper('a4', 'landscape');
-
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output();
-        }, 'daftar-hadir-' . date('Y-m-d') . '.pdf');
     }
 
     public function render()
     {
         $user = Auth::user();
-        if (!$user)
-            return view('livewire.opsmp.daftar-ulang', ['daftarUlangs' => []]);
+        $sekolahId = $user && $user->sekolah ? $user->sekolah->sekolah_id : null;
 
-        $query = DaftarUlangModel::with(['pesertaDidik', 'pengumuman.jalur'])
-            ->where('sekolah_menengah_pertama_id', $user->sekolah_id);
+        $query = DaftarUlangModel::query()
+            ->where('sekolah_menengah_pertama_id', $sekolahId)
+            ->with(['pesertaDidik', 'pengumuman.jalur']);
 
         if ($this->search) {
             $query->whereHas('pesertaDidik', function ($q) {
@@ -355,10 +387,10 @@ class DaftarUlang extends Component
             $query->whereDate('tanggal', '<=', $this->dateEnd);
         }
 
-        $daftarUlangs = $query->orderBy('tanggal', 'asc')->orderBy('waktu_mulai', 'asc')->paginate(10);
+        $daftarUlangs = $query->orderBy('tanggal')->orderBy('nomor_urut')->paginate(15);
 
         return view('livewire.opsmp.daftar-ulang', [
-            'daftarUlangs' => $daftarUlangs
+            'daftarUlangs' => $daftarUlangs,
         ]);
     }
 }

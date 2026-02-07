@@ -260,6 +260,29 @@
                 @endif
             </div>
         @endif
+
+        <div style="margin-top: 20px;">
+            <div style="font-weight: 700; font-size: 14px; text-decoration: underline; margin-bottom: 5px;">
+                PERSYARATAN BERKAS DAFTAR ULANG:
+            </div>
+            @php
+                $syaratSekolah = $sekolah->syarat_daftar_ulang;
+            @endphp
+
+            @if($syaratSekolah)
+                <ul style="list-style-type: disc; padding-left: 20px; font-size: 12px; line-height: 1.5;">
+                    @foreach(explode("\n", $syaratSekolah) as $item)
+                        @if(trim($item))
+                            <li>{{ ltrim(trim($item), "-• ") }}</li>
+                        @endif
+                    @endforeach
+                </ul>
+            @else
+                <div style="font-size: 12px; font-style: italic; color: #64748b;">
+                    Silahkan hubungi pihak sekolah untuk informasi persyaratan berkas.
+                </div>
+            @endif
+        </div>
         <p>
             <em>Catatan: Kelulusan dapat dibatalkan apabila dikemudian hari ditemukan ketidaksesuaian data atau dokumen
                 yang dipalsukan.</em>

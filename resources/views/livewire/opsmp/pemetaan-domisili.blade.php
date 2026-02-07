@@ -5,6 +5,11 @@
             <p class="text-muted mb-0">Kelola zona domisili untuk jalur pendaftaran domisili sekolah Anda.</p>
         </div>
         <div class="d-flex gap-2">
+            @if(count($zonaList) > 0)
+                <button type="button" class="btn btn-outline-danger" onclick="confirmReset()">
+                    <i class="fi fi-rr-refresh me-1"></i> Reset Data
+                </button>
+            @endif
             <button class="btn btn-outline-success" wire:click="openImportModal">
                 <i class="fi fi-rr-file-import me-1"></i> Import Excel
             </button>
@@ -229,3 +234,44 @@
         </div>
     @endif
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmReset() {
+        Swal.fire({
+            title: 'Reset Semua Data?',
+            text: "Semua zona domisili akan dihapus. Tindakan ini tidak dapat dibatalkan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Reset!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Menghapus semua zona domisili.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                @this.resetAllZona();
+            }
+        });
+    }
+
+    document.addEventListener('livewire:initialized', () => {
+        @this.on('resetCompleted', () => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Semua zona domisili telah dihapus.',
+                confirmButtonText: 'OK'
+            });
+        });
+    });
+</script>
+@endpush

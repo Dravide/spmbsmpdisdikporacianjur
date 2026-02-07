@@ -20,12 +20,14 @@ class DaftarUlang extends Model
         'keterangan',
         'status',
         'nomor_urut',
+        'checklist_dokumen',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
         'waktu_mulai' => 'datetime',
         'waktu_selesai' => 'datetime',
+        'checklist_dokumen' => 'array',
     ];
 
     public function sekolah()

@@ -24,7 +24,7 @@ class DayaTampung extends Component
     {
         $this->sekolah = SekolahMenengahPertama::find(auth()->user()->sekolah_id);
 
-        if (!$this->sekolah) {
+        if (! $this->sekolah) {
             abort(403, 'Anda tidak terhubung dengan data sekolah.');
         }
 
@@ -43,6 +43,7 @@ class DayaTampung extends Component
 
         if ($this->sekolah->is_locked_daya_tampung) {
             $this->addError('locked', 'Data tampung terkunci. Hubungi operator dinas untuk mengubah.');
+
             return;
         }
 

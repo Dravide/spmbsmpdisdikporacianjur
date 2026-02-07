@@ -14,24 +14,34 @@ use Livewire\WithPagination;
 #[Title('Data Peserta Didik')]
 class DataPesertaDidik extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public string $search = '';
+
     public $file;
+
     public array $previewData = [];
+
     public bool $showPreview = false;
+
     public $importErrors = [];
+
     public $importedCount = 0;
+
     public $totalToImport = 0;
+
     public $isImporting = false;
 
     // Streaming Import Properties
     public $storedFilePath;
+
     public $lastProcessedLine = 0;
 
     // Edit/Create Properties
     public $isEditMode = false;
+
     public $editId = null;
+
     public $form = [
         'nama' => '',
         'nisn' => '',
@@ -45,13 +55,18 @@ class DataPesertaDidik extends Component
 
     // Filter Properties
     public $filterSekolah;
+
     public $filterKecamatan;
+
     public $filterDesa;
+
     public $filterJk;
 
     // Filter Data Lists
     public $sekolahList = [];
+
     public $kecamatanList = [];
+
     public $desaList = [];
 
     public function mount()
@@ -87,7 +102,7 @@ class DataPesertaDidik extends Component
         $this->desaList = [];
 
         if ($value) {
-            // Find code 
+            // Find code
             $selected = collect($this->kecamatanList)->firstWhere('name', $value);
             if ($selected) {
                 $this->loadDesaList($selected['code']);
@@ -136,14 +151,16 @@ class DataPesertaDidik extends Component
 
     protected function parseFilePreview()
     {
-        if (!file_exists($this->storedFilePath)) {
+        if (! file_exists($this->storedFilePath)) {
             $this->addError('file', 'File tidak ditemukan di server.');
+
             return;
         }
 
         $handle = fopen($this->storedFilePath, 'r');
-        if (!$handle) {
+        if (! $handle) {
             $this->addError('file', 'Gagal membuka file.');
+
             return;
         }
 
@@ -153,16 +170,18 @@ class DataPesertaDidik extends Component
 
         // Preview first 50 lines
         while (($row = fgetcsv($handle, 0, '|')) !== false && $count < 50) {
-            if (count($row) < 5)
+            if (count($row) < 5) {
                 continue;
+            }
 
-            if (!$header) {
+            if (! $header) {
                 // Remove BOM if present
                 $row[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $row[0]);
 
                 $header = array_map(function ($h) {
                     return strtolower(trim($h, " \t\n\r\0\x0B\""));
                 }, $row);
+
                 continue;
             }
 
@@ -173,7 +192,7 @@ class DataPesertaDidik extends Component
             }
 
             // Relaxed validation: ensure we at least have a name
-            if (!empty($rowData['nama'])) {
+            if (! empty($rowData['nama'])) {
                 $data[] = $rowData;
                 $count++;
             }
@@ -183,7 +202,7 @@ class DataPesertaDidik extends Component
         $this->previewData = $data;
         $this->showPreview = count($this->previewData) > 0;
 
-        if (!$this->showPreview) {
+        if (! $this->showPreview) {
             $this->addError('file', 'Format file tidak sesuai atau data kosong. Pastikan delimiter menggunakan Pipe (|) dan ada header kolom.');
         }
 
@@ -197,8 +216,9 @@ class DataPesertaDidik extends Component
 
     public function startImport()
     {
-        if (!$this->storedFilePath || !file_exists($this->storedFilePath)) {
+        if (! $this->storedFilePath || ! file_exists($this->storedFilePath)) {
             $this->dispatch('import-error', message: 'File import hilang. Silakan upload ulang.');
+
             return;
         }
 
@@ -210,8 +230,9 @@ class DataPesertaDidik extends Component
 
     public function processBatch($batchSize = 100)
     {
-        if (!$this->isImporting || !$this->storedFilePath) {
+        if (! $this->isImporting || ! $this->storedFilePath) {
             $this->isImporting = false;
+
             return;
         }
 
@@ -222,19 +243,22 @@ class DataPesertaDidik extends Component
 
         // Skip to where we left off
         while (($row = fgetcsv($handle, 0, '|')) !== false) {
-            if (count($row) < 5)
+            if (count($row) < 5) {
                 continue;
+            }
 
-            if (!$header) {
+            if (! $header) {
                 $row[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $row[0]);
                 $header = array_map(function ($h) {
                     return strtolower(trim($h, " \t\n\r\0\x0B\""));
                 }, $row);
+
                 continue;
             }
 
             if ($currentLine < $this->importedCount) {
                 $currentLine++;
+
                 continue;
             }
 
@@ -250,7 +274,7 @@ class DataPesertaDidik extends Component
 
             // Process Data
             try {
-                if (!empty($rowData['peserta_didik_id']) && !empty($rowData['nama'])) {
+                if (! empty($rowData['peserta_didik_id']) && ! empty($rowData['nama'])) {
                     PesertaDidik::updateOrCreate(
                         ['peserta_didik_id' => $rowData['peserta_didik_id']],
                         [
@@ -284,7 +308,7 @@ class DataPesertaDidik extends Component
                             'bujur' => isset($rowData['bujur']) ? (float) $rowData['bujur'] : null,
                             'flag_pip' => $rowData['flag_pip'] ?? null,
                             // Set default password from tanggal_lahir (Format: YYYYMMDD)
-                            'password' => !empty($rowData['tanggal_lahir'])
+                            'password' => ! empty($rowData['tanggal_lahir'])
                                 ? \Illuminate\Support\Facades\Hash::make(\Carbon\Carbon::parse($rowData['tanggal_lahir'])->format('Ymd'))
                                 : null,
                         ]
@@ -303,8 +327,9 @@ class DataPesertaDidik extends Component
         // Update processed count (data lines only)
         $this->importedCount += $processedInBatch;
 
-        if ($this->totalToImport <= 0)
+        if ($this->totalToImport <= 0) {
             $this->totalToImport = 1;
+        }
         $progress = ($this->importedCount / $this->totalToImport) * 100;
 
         if ($processedInBatch < $batchSize) {
@@ -330,7 +355,7 @@ class DataPesertaDidik extends Component
     public function resetData()
     {
         PesertaDidik::truncate();
-        $this->dispatch('import-success', message: "Semua data peserta didik berhasil dihapus.");
+        $this->dispatch('import-success', message: 'Semua data peserta didik berhasil dihapus.');
     }
 
     public function delete($id)
@@ -338,7 +363,7 @@ class DataPesertaDidik extends Component
         $pd = PesertaDidik::find($id);
         if ($pd) {
             $pd->delete();
-            $this->dispatch('import-success', message: "Data siswa berhasil dihapus.");
+            $this->dispatch('import-success', message: 'Data siswa berhasil dihapus.');
         }
     }
 
@@ -379,7 +404,7 @@ class DataPesertaDidik extends Component
         $data = $this->form;
 
         // Update password if date of birth changes or password is not set
-        if (!empty($data['tanggal_lahir'])) {
+        if (! empty($data['tanggal_lahir'])) {
             $dob = \Carbon\Carbon::parse($data['tanggal_lahir'])->format('Ymd');
             // Optionally only update password if explicitly requested, but usually DOB sync is intended
             // For now, let's keep password in sync with DOB for easy recovery
@@ -389,7 +414,7 @@ class DataPesertaDidik extends Component
         $pd->update($data);
 
         $this->reset(['isEditMode', 'editId', 'form']);
-        $this->dispatch('import-success', message: "Data siswa berhasil diperbarui.");
+        $this->dispatch('import-success', message: 'Data siswa berhasil diperbarui.');
     }
 
     public function cancelEdit()
@@ -408,14 +433,14 @@ class DataPesertaDidik extends Component
                         ->orWhere('nik', 'like', "%{$this->search}%");
                 });
             })
-            ->when($this->filterSekolah, fn($q) => $q->where('sekolah_id', $this->filterSekolah))
-            ->when($this->filterKecamatan, fn($q) => $q->where('kecamatan', $this->filterKecamatan))
-            ->when($this->filterDesa, fn($q) => $q->where('desa_kelurahan', $this->filterDesa))
-            ->when($this->filterJk, fn($q) => $q->where('jenis_kelamin', $this->filterJk))
+            ->when($this->filterSekolah, fn ($q) => $q->where('sekolah_id', $this->filterSekolah))
+            ->when($this->filterKecamatan, fn ($q) => $q->where('kecamatan', $this->filterKecamatan))
+            ->when($this->filterDesa, fn ($q) => $q->where('desa_kelurahan', $this->filterDesa))
+            ->when($this->filterJk, fn ($q) => $q->where('jenis_kelamin', $this->filterJk))
             ->paginate(15);
 
         return view('livewire.admin.data-peserta-didik', [
-            'pesertaDidikList' => $data
+            'pesertaDidikList' => $data,
         ]);
     }
 

@@ -36,20 +36,21 @@ class StudentRegistration extends Component
             foreach ($this->requiredBerkas as $berkas) {
                 // Skip file validation if file already exists in database
                 $maxSize = $berkas->max_size_kb ?? 2048;
-                if (!isset($this->existingBerkas[$berkas->id])) {
+                if (! isset($this->existingBerkas[$berkas->id])) {
                     $rules["berkasFiles.{$berkas->id}"] = $berkas->is_required ? "required|file|max:{$maxSize}" : "nullable|file|max:{$maxSize}";
                 } else {
                     $rules["berkasFiles.{$berkas->id}"] = "nullable|file|max:{$maxSize}";
                 }
 
                 // Dynamic Form Fields Rules
-                if (!empty($berkas->form_fields) && is_array($berkas->form_fields)) {
+                if (! empty($berkas->form_fields) && is_array($berkas->form_fields)) {
                     foreach ($berkas->form_fields as $field) {
                         $fieldName = $field['name'] ?? null;
-                        if (!$fieldName)
+                        if (! $fieldName) {
                             continue;
+                        }
 
-                        $fieldRequired = !empty($field['required']);
+                        $fieldRequired = ! empty($field['required']);
                         $existingValue = $this->uploadedBerkasData[$berkas->id][$fieldName] ?? null;
 
                         if ($fieldRequired && empty($existingValue)) {
@@ -66,44 +67,60 @@ class StudentRegistration extends Component
     }
 
     public $step = 1;
+
     public $totalSteps = 6;
 
     // Step 1: Konfirmasi Data Diri
     public $userData;
+
     public $dataConfirmed = false;
+
     public $missingFields = [];
 
     // Step 2: Pilih Sekolah
     public $searchSekolah = '';
+
     public $searchSekolah2 = '';
+
     public $selectedSekolahId = null;
+
     public $selectedSekolahId2 = null;
+
     public $selectedSekolahName = '';
+
     public $selectedSekolahName2 = '';
 
     // Step 2: Koordinat
     public $latitude;
+
     public $longitude;
+
     public $distance; // in meters
 
     // Step 3: Pilih Jalur
     public $selectedJalurId = null;
+
     public $jalurList = [];
 
     // Step 4: Upload Berkas
     public $berkasFiles = []; // [berkas_id => file]
+
     public $requiredBerkas = [];
+
     public $uploadedBerkasData = []; // [berkas_id => form_data_array]
+
     public $existingBerkas = []; // [berkas_id => path]
 
     // Step 5: Validasi (Review Data)
     public $pendaftaranId = null;
+
     public $isSubmitted = false;
+
     public $registrationData = null;
 
     public $scheduleOpen = true;
-    public $scheduleMessage = '';
 
+    public $scheduleMessage = '';
 
     public $scheduleStartDate = null;
 
@@ -113,7 +130,7 @@ class StudentRegistration extends Component
         $this->scheduleOpen = \App\Models\Jadwal::isOpen('pendaftaran');
         $this->scheduleMessage = \App\Models\Jadwal::getMessage('pendaftaran');
 
-        if (!$this->scheduleOpen) {
+        if (! $this->scheduleOpen) {
             $jadwal = \App\Models\Jadwal::where('keyword', 'pendaftaran')->first();
             if ($jadwal && $jadwal->aktif && now()->lessThan($jadwal->tanggal_mulai)) {
                 $this->scheduleStartDate = $jadwal->tanggal_mulai->toISOString();
@@ -130,8 +147,9 @@ class StudentRegistration extends Component
         $user = Auth::user();
         $siswa = ($user instanceof \App\Models\PesertaDidik) ? $user : ($user->pesertaDidik ?? null);
 
-        if (!$siswa)
+        if (! $siswa) {
             return;
+        }
 
         // Load student data for Step 1
         $this->userData = $siswa;
@@ -156,6 +174,7 @@ class StudentRegistration extends Component
                     $this->existingBerkas[$file->berkas_id] = $file->file_path;
                     $this->uploadedBerkasData[$file->berkas_id] = $file->form_data ?? [];
                 }
+
                 return;
             }
 
@@ -170,12 +189,15 @@ class StudentRegistration extends Component
                 $this->selectedSekolahName2 = $registration->sekolah2->nama;
             }
 
-            if ($registration->koordinat_lintang)
+            if ($registration->koordinat_lintang) {
                 $this->latitude = $registration->koordinat_lintang;
-            if ($registration->koordinat_bujur)
+            }
+            if ($registration->koordinat_bujur) {
                 $this->longitude = $registration->koordinat_bujur;
-            if ($registration->jarak_meter)
+            }
+            if ($registration->jarak_meter) {
                 $this->distance = $registration->jarak_meter;
+            }
 
             $this->selectedJalurId = $registration->jalur_pendaftaran_id;
 
@@ -228,14 +250,16 @@ class StudentRegistration extends Component
 
     public function saveCurrentStep()
     {
-        if ($this->isSubmitted)
+        if ($this->isSubmitted) {
             return;
+        }
 
         $user = Auth::user();
         $siswa = ($user instanceof \App\Models\PesertaDidik) ? $user : ($user->pesertaDidik ?? null);
 
-        if (!$siswa)
+        if (! $siswa) {
             return;
+        }
 
         // Data payload
         $data = [
@@ -261,7 +285,8 @@ class StudentRegistration extends Component
                 $pendaftaran = Pendaftaran::create($data);
                 $this->pendaftaranId = $pendaftaran->id;
             } catch (\Exception $e) {
-                session()->flash('error', 'Gagal membuat draft: ' . $e->getMessage());
+                session()->flash('error', 'Gagal membuat draft: '.$e->getMessage());
+
                 return;
             }
         }
@@ -277,7 +302,7 @@ class StudentRegistration extends Component
                     [
                         'file_path' => $path,
                         'nama_file_asli' => $file->getClientOriginalName(),
-                        'form_data' => $this->uploadedBerkasData[$berkasId] ?? null
+                        'form_data' => $this->uploadedBerkasData[$berkasId] ?? null,
                     ]
                 );
 
@@ -285,7 +310,7 @@ class StudentRegistration extends Component
             }
 
             // Save form data only (for existing files or just data updates)
-            if (!empty($this->uploadedBerkasData)) {
+            if (! empty($this->uploadedBerkasData)) {
                 foreach ($this->uploadedBerkasData as $berkasId => $formData) {
                     $existing = PendaftaranBerkas::where('pendaftaran_id', $this->pendaftaranId)
                         ->where('berkas_id', $berkasId)
@@ -385,8 +410,9 @@ class StudentRegistration extends Component
                 }
             }
 
-            if (!empty($this->missingFields)) {
+            if (! empty($this->missingFields)) {
                 $this->addError('step1', 'Data diri belum lengkap. Silakan lengkapi data yang ditandai merah melalui Operator Sekolah Asal.');
+
                 return;
             }
         } elseif ($step == 2) {
@@ -416,7 +442,7 @@ class StudentRegistration extends Component
             foreach ($this->requiredBerkas as $berkas) {
                 // Skip file validation if file already exists in database
                 $maxSize = $berkas->max_size_kb ?? 2048;
-                if (!isset($this->existingBerkas[$berkas->id])) {
+                if (! isset($this->existingBerkas[$berkas->id])) {
                     if ($berkas->is_required) {
                         $rules["berkasFiles.{$berkas->id}"] = "required|file|max:{$maxSize}";
                         $messages["berkasFiles.{$berkas->id}.required"] = "Berkas {$berkas->nama} wajib diunggah.";
@@ -426,13 +452,14 @@ class StudentRegistration extends Component
                 }
 
                 // Validate form_data fields
-                if (!empty($berkas->form_fields) && is_array($berkas->form_fields)) {
+                if (! empty($berkas->form_fields) && is_array($berkas->form_fields)) {
                     foreach ($berkas->form_fields as $field) {
                         $fieldName = $field['name'] ?? null;
-                        if (!$fieldName)
+                        if (! $fieldName) {
                             continue;
+                        }
 
-                        $fieldRequired = !empty($field['required']);
+                        $fieldRequired = ! empty($field['required']);
                         $existingValue = $this->uploadedBerkasData[$berkas->id][$fieldName] ?? null;
 
                         // Only require field if it's marked required AND doesn't have existing value
@@ -445,7 +472,7 @@ class StudentRegistration extends Component
                 }
             }
 
-            if (!empty($rules)) {
+            if (! empty($rules)) {
                 $this->validate($rules, $messages);
             }
         }
@@ -475,10 +502,11 @@ class StudentRegistration extends Component
     public function submit()
     {
         // Debugging
-        // session()->flash('error', 'Submit triggered!'); 
+        // session()->flash('error', 'Submit triggered!');
 
-        if ($this->isSubmitted)
+        if ($this->isSubmitted) {
             return;
+        }
 
         // Validate all steps again
         // Validate all steps again
@@ -487,12 +515,12 @@ class StudentRegistration extends Component
                 $this->validateStep($i);
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
-            session()->flash('error', 'Validasi gagal di langkah ' . $i . ': ' . implode(', ', $e->validator->errors()->all()));
+            session()->flash('error', 'Validasi gagal di langkah '.$i.': '.implode(', ', $e->validator->errors()->all()));
             throw $e;
         }
 
         // Ensure draft is saved
-        if (!$this->pendaftaranId) {
+        if (! $this->pendaftaranId) {
             $this->saveCurrentStep();
         }
 
@@ -501,7 +529,7 @@ class StudentRegistration extends Component
             $pendaftaran = Pendaftaran::find($this->pendaftaranId);
         }
 
-        if (!$pendaftaran) {
+        if (! $pendaftaran) {
             // Record might be deleted or stale ID. Try to recreate.
             $this->pendaftaranId = null;
             $this->saveCurrentStep();
@@ -511,17 +539,18 @@ class StudentRegistration extends Component
             }
         }
 
-        if (!$pendaftaran) {
+        if (! $pendaftaran) {
             session()->flash('error', 'Gagal menyimpan data pendaftaran. Silakan coba lagi.');
+
             return;
         }
 
         DB::beginTransaction();
         try {
             // Generate Registration Number if not exists
-            if (!$pendaftaran->nomor_pendaftaran) {
+            if (! $pendaftaran->nomor_pendaftaran) {
                 // Format: SPMB-XXXXXX-YY (e.g., SPMB-A1B2C3-26)
-                $regNumber = 'SPMB-' . strtoupper(\Illuminate\Support\Str::random(6)) . '-' . date('y');
+                $regNumber = 'SPMB-'.strtoupper(\Illuminate\Support\Str::random(6)).'-'.date('y');
                 $pendaftaran->nomor_pendaftaran = $regNumber;
             }
 
@@ -544,10 +573,10 @@ class StudentRegistration extends Component
                     );
                 } catch (\Exception $ex) {
                     // Log error silently or flash if needed, usually log is better
-                    \Illuminate\Support\Facades\Log::error('Notification Error: ' . $ex->getMessage());
+                    \Illuminate\Support\Facades\Log::error('Notification Error: '.$ex->getMessage());
                 }
             } else {
-                \Illuminate\Support\Facades\Log::warning('Notification Skipped: PesertaDidik relation not found for Pendaftaran ID ' . $pendaftaran->id);
+                \Illuminate\Support\Facades\Log::warning('Notification Skipped: PesertaDidik relation not found for Pendaftaran ID '.$pendaftaran->id);
             }
 
             session()->flash('message', 'Pendaftaran berhasil dikirim! Silakan tunggu verifikasi.');
@@ -555,7 +584,7 @@ class StudentRegistration extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            session()->flash('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 
@@ -569,7 +598,7 @@ class StudentRegistration extends Component
             $sekolahList = SekolahMenengahPertama::query()
                 ->where('mode_spmb', 'Full Online')
                 ->when($this->searchSekolah, function ($query) {
-                    $query->where('nama', 'like', '%' . $this->searchSekolah . '%');
+                    $query->where('nama', 'like', '%'.$this->searchSekolah.'%');
                 })
                 ->orderBy('nama')
                 ->take(10)
@@ -579,7 +608,7 @@ class StudentRegistration extends Component
             $sekolahList2 = SekolahMenengahPertama::query()
                 ->where('mode_spmb', 'Semi Online')
                 ->when($this->searchSekolah2, function ($query) {
-                    $query->where('nama', 'like', '%' . $this->searchSekolah2 . '%');
+                    $query->where('nama', 'like', '%'.$this->searchSekolah2.'%');
                 })
                 ->orderBy('nama')
                 ->take(10)

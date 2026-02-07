@@ -14,13 +14,18 @@ use Livewire\Component;
 class VervalBerkasDetail extends Component
 {
     public $pendaftaranId;
+
     public $pendaftaran;
+
     public $berkasList = [];
 
     // Modal
     public $showModal = false;
+
     public $selectedBerkas = null;
+
     public $newStatus = '';
+
     public $catatan = '';
 
     public function mount($id)
@@ -64,59 +69,96 @@ class VervalBerkasDetail extends Component
 
     public function updateStatus()
     {
-        if ($this->pendaftaran->status == 'draft') {
-            session()->flash('error', 'Tidak dapat memverifikasi berkas karena status pendaftaran masih Draft.');
+        try {
+            if ($this->pendaftaran->status == 'draft') {
+                session()->flash('error', 'Tidak dapat memverifikasi berkas karena status pendaftaran masih Draft.');
+                $this->closeModal();
+
+                return;
+            }
+
+            $this->validate([
+                'newStatus' => 'required|in:pending,approved,revision,rejected',
+            ]);
+
+            if ($this->selectedBerkas) {
+                $this->selectedBerkas->status_berkas = $this->newStatus;
+                $this->selectedBerkas->catatan_verifikasi = $this->catatan;
+                $this->selectedBerkas->save();
+
+                session()->flash('message', 'Status berkas berhasil diperbarui.');
+                $this->checkRegistrationStatus(); // Check overall status
+                $this->loadBerkas();
+            }
+
             $this->closeModal();
-            return;
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Update status failed: '.$e->getMessage(), [
+                'exception' => $e,
+                'user_id' => Auth::user()->id,
+                'pendaftaran_id' => $this->pendaftaranId,
+            ]);
+
+            session()->flash('error', 'Terjadi kesalahan saat memperbarui status: '.$e->getMessage());
+            $this->closeModal();
         }
-
-        $this->validate([
-            'newStatus' => 'required|in:pending,approved,revision,rejected',
-        ]);
-
-        if ($this->selectedBerkas) {
-            $this->selectedBerkas->status_berkas = $this->newStatus;
-            $this->selectedBerkas->catatan_verifikasi = $this->catatan;
-            $this->selectedBerkas->save();
-
-            session()->flash('message', 'Status berkas berhasil diperbarui.');
-            $this->checkRegistrationStatus(); // Check overall status
-            $this->loadBerkas();
-        }
-
-        $this->closeModal();
     }
 
     public function quickApprove($id)
     {
-        if ($this->pendaftaran->status == 'draft') {
-            session()->flash('error', 'Tidak dapat memverifikasi berkas karena status pendaftaran masih Draft.');
-            return;
-        }
+        try {
+            if ($this->pendaftaran->status == 'draft') {
+                session()->flash('error', 'Tidak dapat memverifikasi berkas karena status pendaftaran masih Draft.');
 
-        $berkas = PendaftaranBerkas::find($id);
-        if ($berkas) {
-            $berkas->status_berkas = 'approved';
-            $berkas->save();
-            session()->flash('message', 'Berkas disetujui.');
-            $this->checkRegistrationStatus(); // Check overall status
-            $this->loadBerkas();
+                return;
+            }
+
+            $berkas = PendaftaranBerkas::find($id);
+            if ($berkas) {
+                $berkas->status_berkas = 'approved';
+                $berkas->save();
+                session()->flash('message', 'Berkas disetujui.');
+                $this->checkRegistrationStatus(); // Check overall status
+                $this->loadBerkas();
+            }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Quick approve failed: '.$e->getMessage(), [
+                'exception' => $e,
+                'user_id' => Auth::user()->id,
+                'berkas_id' => $id,
+            ]);
+
+            session()->flash('error', 'Terjadi kesalahan saat menyetujui berkas: '.$e->getMessage());
         }
     }
 
     public function approveAll()
     {
-        if ($this->pendaftaran->status == 'draft') {
-            session()->flash('error', 'Tidak dapat memverifikasi berkas karena status pendaftaran masih Draft.');
-            return;
+        try {
+            if ($this->pendaftaran->status == 'draft') {
+                session()->flash('error', 'Tidak dapat memverifikasi berkas karena status pendaftaran masih Draft.');
+
+                return;
+            }
+
+            PendaftaranBerkas::where('pendaftaran_id', $this->pendaftaranId)
+                ->update(['status_berkas' => 'approved']);
+
+            session()->flash('message', 'Semua berkas disetujui.');
+            $this->checkRegistrationStatus(); // Check overall status (will definitely be verified)
+            $this->loadBerkas();
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Approve all failed: '.$e->getMessage(), [
+                'exception' => $e,
+                'user_id' => Auth::user()->id,
+                'pendaftaran_id' => $this->pendaftaranId,
+            ]);
+
+            session()->flash('error', 'Terjadi kesalahan saat menyetujui semua berkas: '.$e->getMessage());
         }
-
-        PendaftaranBerkas::where('pendaftaran_id', $this->pendaftaranId)
-            ->update(['status_berkas' => 'approved']);
-
-        session()->flash('message', 'Semua berkas disetujui.');
-        $this->checkRegistrationStatus(); // Check overall status (will definitely be verified)
-        $this->loadBerkas();
     }
 
     protected function checkRegistrationStatus()
@@ -128,7 +170,7 @@ class VervalBerkasDetail extends Component
             ->where('status_berkas', '!=', 'approved')
             ->exists();
 
-        if (!$hasPendingOrRejected) {
+        if (! $hasPendingOrRejected) {
             $this->pendaftaran->status = 'verified';
             $this->pendaftaran->verified_at = now();
             $this->pendaftaran->verified_by = Auth::id();
@@ -143,7 +185,7 @@ class VervalBerkasDetail extends Component
 
             session()->flash('message', 'Semua berkas lengkap. Status pendaftaran otomatis berubah menjadi TERVERIFIKASI.');
         } else {
-            // Optional: revert to submitted if not all approved? 
+            // Optional: revert to submitted if not all approved?
             // For now, let's just stick to upgrading to verified.
             // But if we want to be strict, if status was verified and now we reject one, should we revert?
             // The user request was "makan jadi vrifired juga" (then become verified too).

@@ -14,9 +14,13 @@ use PragmaRX\Google2FA\Google2FA;
 class TwoFactorSetup extends Component
 {
     public $qrCodeSvg;
+
     public $secret;
+
     public $code;
+
     public $setupComplete = false;
+
     public $recoveryCodes = [];
 
     public function mount()
@@ -27,8 +31,8 @@ class TwoFactorSetup extends Component
             return redirect()->route('dashboard');
         }
 
-        if (!$this->secret) {
-            $google2fa = new Google2FA();
+        if (! $this->secret) {
+            $google2fa = new Google2FA;
             $this->secret = $google2fa->generateSecretKey();
 
             // Temporarily store secret to generate QR
@@ -51,7 +55,7 @@ class TwoFactorSetup extends Component
             // Generate Recovery Codes
             $recoveryCodes = [];
             for ($i = 0; $i < 8; $i++) {
-                $recoveryCodes[] = str()->random(10) . '-' . str()->random(10);
+                $recoveryCodes[] = str()->random(10).'-'.str()->random(10);
             }
 
             $user->replaceRecoveryCodes($recoveryCodes);

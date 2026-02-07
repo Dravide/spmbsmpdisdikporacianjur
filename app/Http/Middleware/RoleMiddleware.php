@@ -15,17 +15,18 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             return redirect()->route('login');
         }
 
-        if (!$request->user()->is_active) {
+        if (! $request->user()->is_active) {
             \Illuminate\Support\Facades\Auth::guard('web')->logout();
+
             return redirect()->route('login')
                 ->with('error', 'Akun Anda telah dinonaktifkan.');
         }
 
-        if (!in_array($request->user()->role, $roles)) {
+        if (! in_array($request->user()->role, $roles)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 

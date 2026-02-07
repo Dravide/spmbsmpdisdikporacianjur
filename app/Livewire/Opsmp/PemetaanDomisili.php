@@ -16,28 +16,36 @@ class PemetaanDomisili extends Component
     use \Livewire\WithFileUploads;
 
     public $sekolah;
+
     public $zonaList = [];
 
     // Form
     public $showFormModal = false;
+
     public $zonaId = null;
+
     public $kecamatan = '';
+
     public $desa = '';
+
     public $rw = '';
+
     public $rt = '';
 
     // Import
     public $showImportModal = false;
+
     public $importFile;
 
     // API Data
     public $kecamatanList = [];
+
     public $desaList = [];
 
     public function mount()
     {
         $this->sekolah = SekolahMenengahPertama::find(auth()->user()->sekolah_id);
-        if (!$this->sekolah) {
+        if (! $this->sekolah) {
             abort(403, 'Anda tidak terhubung dengan data sekolah.');
         }
         $this->loadZonaList();
@@ -158,15 +166,26 @@ class PemetaanDomisili extends Component
         }
     }
 
+    public function resetAllZona()
+    {
+        $deleted = ZonaDomisili::where('sekolah_id', $this->sekolah->sekolah_id)->delete();
+        $this->loadZonaList();
+        $this->dispatch('resetCompleted');
+    }
+
     // Import Logic
     public $previewData = [];
+
     public $importErrors = [];
+
     public $canImport = false;
+
     public $isImporting = false;
 
     public function downloadTemplate()
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithTitle {
+        return \Maatwebsite\Excel\Facades\Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithTitle
+        {
             public function headings(): array
             {
                 return ['Kecamatan', 'Desa', 'RW', 'RT'];
@@ -206,17 +225,17 @@ class PemetaanDomisili extends Component
     {
         try {
             // Define anonymous class for Import
-            $import = new class implements \Maatwebsite\Excel\Concerns\ToArray, \Maatwebsite\Excel\Concerns\WithHeadingRow {
-                public function array(array $array)
-                {
-                }
+            $import = new class implements \Maatwebsite\Excel\Concerns\ToArray, \Maatwebsite\Excel\Concerns\WithHeadingRow
+            {
+                public function array(array $array) {}
             };
 
             $data = \Maatwebsite\Excel\Facades\Excel::toArray($import, $this->importFile);
             $rows = $data[0] ?? []; // Get first sheet
 
         } catch (\Exception $e) {
-            $this->addError('importFile', 'Gagal membaca file Excel: ' . $e->getMessage());
+            $this->addError('importFile', 'Gagal membaca file Excel: '.$e->getMessage());
+
             return;
         }
 
@@ -238,8 +257,9 @@ class PemetaanDomisili extends Component
             $rtInput = trim($row['rt'] ?? '');
 
             // Skip empty rows
-            if (empty($kecamatanInput) && empty($desaInput))
+            if (empty($kecamatanInput) && empty($desaInput)) {
                 continue;
+            }
 
             $status = 'Valid';
             $errorMsg = '';
@@ -249,7 +269,6 @@ class PemetaanDomisili extends Component
 
             // Normalize Input: Remove 'Desa'/'Kelurahan' prefix if present
             $desaName = preg_replace('/^(desa|kelurahan)\s+/i', '', $desaInput);
-
 
             // Validation
             if (empty($kecamatanInput) || empty($desaInput)) {
@@ -262,7 +281,7 @@ class PemetaanDomisili extends Component
                     return strcasecmp($d->name, $kecamatanName) === 0;
                 });
 
-                if (!$district) {
+                if (! $district) {
                     $status = 'Invalid';
                     $errorMsg = 'Kecamatan tidak ditemukan di Cianjur';
                 } else {
@@ -272,23 +291,23 @@ class PemetaanDomisili extends Component
                         ->where('name', 'like', $desaName)
                         ->first();
 
-                    if (!$village) {
+                    if (! $village) {
                         $allVillages = \Laravolt\Indonesia\Models\Village::where('district_code', $district->code)->get();
                         $village = $allVillages->first(function ($v) use ($desaName) {
                             return strcasecmp($v->name, $desaName) === 0;
                         });
                     }
 
-
-                    if (!$village) {
+                    if (! $village) {
                         $status = 'Invalid';
-                        $errorMsg = 'Desa tidak ditemukan di Kecamatan ' . $kecamatanInput;
+                        $errorMsg = 'Desa tidak ditemukan di Kecamatan '.$kecamatanInput;
                     }
                 }
             }
 
-            if ($status === 'Valid')
+            if ($status === 'Valid') {
                 $validCount++;
+            }
 
             $processedRows[] = [
                 'kecamatan' => $kecamatanInput,
@@ -296,11 +315,12 @@ class PemetaanDomisili extends Component
                 'rw' => $rwInput,
                 'rt' => $rtInput,
                 'status' => $status,
-                'error' => $errorMsg
+                'error' => $errorMsg,
             ];
 
-            if (count($processedRows) > 100)
-                break; // Limit preview
+            if (count($processedRows) > 100) {
+                break;
+            } // Limit preview
         }
 
         $this->previewData = $processedRows;
@@ -309,8 +329,9 @@ class PemetaanDomisili extends Component
 
     public function saveImport()
     {
-        if (!$this->canImport || empty($this->previewData))
+        if (! $this->canImport || empty($this->previewData)) {
             return;
+        }
 
         $this->isImporting = true;
         $count = 0;
@@ -342,7 +363,6 @@ class PemetaanDomisili extends Component
         $this->showImportModal = false;
         $this->reset(['importFile', 'previewData', 'canImport']);
     }
-
 
     public function resetForm()
     {

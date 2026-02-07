@@ -8,12 +8,17 @@ use Livewire\Component;
 class EditSiswaModal extends Component
 {
     public $isOpen = false;
+
     public $editId;
+
     public $formData = [];
+
     public $kecamatanList = [];
+
     public $desaList = [];
 
     public $selectedKecamatanCode;
+
     public $selectedDesaCode;
 
     protected $listeners = ['editSiswa' => 'openModal'];
@@ -61,8 +66,9 @@ class EditSiswaModal extends Component
         $siswa = PesertaDidik::with('pendaftaran')->findOrFail($id);
 
         if ($siswa->pendaftaran && in_array($siswa->pendaftaran->status, ['submitted', 'verified', 'accepted'])) {
-            $this->dispatch('alert', ['type' => 'error', 'message' => 'Data tidak dapat diedit karena status pendaftaran: ' . $siswa->pendaftaran->status]);
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Data tidak dapat diedit karena status pendaftaran: '.$siswa->pendaftaran->status]);
             $this->closeModal();
+
             return;
         }
 
@@ -100,7 +106,7 @@ class EditSiswaModal extends Component
         $this->selectedKecamatanCode = null;
         $this->selectedDesaCode = null;
 
-        if (!empty($this->formData['kecamatan'])) {
+        if (! empty($this->formData['kecamatan'])) {
             $kec = \Laravolt\Indonesia\Models\District::where('name', $this->formData['kecamatan'])
                 ->where('city_code', '3203')
                 ->select('code', 'name') // Optimization
@@ -110,7 +116,7 @@ class EditSiswaModal extends Component
                 $this->selectedKecamatanCode = $kec->code;
                 $this->loadDesa($kec->code);
 
-                if (!empty($this->formData['desa_kelurahan'])) {
+                if (! empty($this->formData['desa_kelurahan'])) {
                     $desa = \Laravolt\Indonesia\Models\Village::where('name', $this->formData['desa_kelurahan'])
                         ->where('district_code', $kec->code)
                         ->select('code', 'name') // Optimization
@@ -163,12 +169,13 @@ class EditSiswaModal extends Component
         $siswa = PesertaDidik::with('pendaftaran')->findOrFail($this->editId);
         if ($siswa->pendaftaran && in_array($siswa->pendaftaran->status, ['submitted', 'verified', 'accepted'])) {
             $this->dispatch('alert', ['type' => 'error', 'message' => 'Data terkunci. Tidak dapat menyimpan perubahan.']);
+
             return;
         }
 
         try {
             $this->validate(array_merge($this->rules, [
-                'formData.nisn' => 'required|numeric|unique:peserta_didiks,nisn,' . $this->editId,
+                'formData.nisn' => 'required|numeric|unique:peserta_didiks,nisn,'.$this->editId,
             ]));
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-throw or handle error
@@ -178,7 +185,8 @@ class EditSiswaModal extends Component
                     $detailedErrors[] = "$key: $msg";
                 }
             }
-            $this->dispatch('alert', ['type' => 'error', 'message' => 'Gagal menyimpan: ' . implode(', ', $detailedErrors)]);
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Gagal menyimpan: '.implode(', ', $detailedErrors)]);
+
             return;
         }
 

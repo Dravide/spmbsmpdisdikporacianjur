@@ -57,6 +57,7 @@ class LoginSession extends Model
     public function updateActivity(): bool
     {
         $this->last_activity = now();
+
         return $this->save();
     }
 
@@ -67,7 +68,7 @@ class LoginSession extends Model
     {
         $roleSetting = $this->user->roleSetting();
 
-        if (!$roleSetting) {
+        if (! $roleSetting) {
             return false;
         }
 

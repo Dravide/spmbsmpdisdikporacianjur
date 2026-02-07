@@ -16,14 +16,20 @@ class DataPendaftaran extends Component
     use WithPagination;
 
     public $search = '';
+
     public $filterStatus = '';
+
     public $filterJalur = '';
+
     public $filterSekolah = ''; // New Filter
+
     public $startDate = '';
+
     public $endDate = '';
 
     // Detail Modal
     public $showDetailModal = false;
+
     public $selectedPendaftaran = null;
 
     protected $queryString = ['search', 'filterStatus', 'filterJalur', 'filterSekolah', 'startDate', 'endDate'];
@@ -50,7 +56,7 @@ class DataPendaftaran extends Component
             'pesertaDidik.sekolah',
             'sekolah',
             'jalur',
-            'berkas.berkas'
+            'berkas.berkas',
         ])->find($id);
         $this->showDetailModal = true;
     }
@@ -59,6 +65,26 @@ class DataPendaftaran extends Component
     {
         $this->showDetailModal = false;
         $this->selectedPendaftaran = null;
+    }
+
+    public function delete($id)
+    {
+        $pendaftaran = Pendaftaran::find($id);
+        $user = Auth::user();
+
+        if ($pendaftaran && $pendaftaran->sekolah_menengah_pertama_id == $user->sekolah_id) {
+            foreach ($pendaftaran->berkas as $berkas) {
+                if ($berkas->file_path && \Storage::disk('public')->exists($berkas->file_path)) {
+                    \Storage::disk('public')->delete($berkas->file_path);
+                }
+                $berkas->delete();
+            }
+
+            $pendaftaran->delete();
+            session()->flash('message', 'Data pendaftaran berhasil dihapus.');
+        } else {
+            session()->flash('error', 'Data pendaftaran tidak ditemukan atau Anda tidak memiliki akses.');
+        }
     }
 
     public function render()
@@ -74,15 +100,14 @@ class DataPendaftaran extends Component
             $q->where('sekolah_menengah_pertama_id', $sekolahId);
         })->orderBy('nama')->get();
 
-
         $pendaftarans = Pendaftaran::query()
             ->with(['pesertaDidik.sekolah', 'sekolah', 'jalur'])
             ->where('sekolah_menengah_pertama_id', $sekolahId)
             ->when($this->search, function ($query) {
                 $query->whereHas('pesertaDidik', function ($q) {
-                    $q->where('nama', 'like', '%' . $this->search . '%')
-                        ->orWhere('nisn', 'like', '%' . $this->search . '%');
-                })->orWhere('nomor_pendaftaran', 'like', '%' . $this->search . '%');
+                    $q->where('nama', 'like', '%'.$this->search.'%')
+                        ->orWhere('nisn', 'like', '%'.$this->search.'%');
+                })->orWhere('nomor_pendaftaran', 'like', '%'.$this->search.'%');
             })
             ->when($this->filterStatus, function ($query) {
                 $query->where('status', $this->filterStatus);

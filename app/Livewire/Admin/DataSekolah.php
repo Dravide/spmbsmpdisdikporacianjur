@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
@@ -18,7 +17,9 @@ class DataSekolah extends Component
     use WithPagination;
 
     public string $search = '';
+
     public ?SekolahDasar $selectedSekolah = null;
+
     public bool $showDetail = false;
 
     public function updatingSearch()
@@ -46,8 +47,11 @@ class DataSekolah extends Component
         'alamat_jalan' => '',
         'generate_account' => true,
     ];
+
     public $showCreateModal = false;
+
     public $isEditMode = false;
+
     public $editId = null;
 
     public function create()
@@ -118,14 +122,14 @@ class DataSekolah extends Component
             $this->dispatch('import-success', message: 'Data sekolah berhasil ditambahkan.');
 
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal menyimpan data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal menyimpan data: '.$e->getMessage());
         }
     }
 
     public function update()
     {
         $this->validate([
-            'form.npsn' => 'required|numeric|unique:sekolah_dasar,npsn,' . $this->editId . ',sekolah_id',
+            'form.npsn' => 'required|numeric|unique:sekolah_dasar,npsn,'.$this->editId.',sekolah_id',
             'form.nama' => 'required|string|max:255',
             'form.status_sekolah' => 'required|in:Negeri,Swasta',
             'form.desa_kelurahan' => 'nullable|string|max:255',
@@ -156,7 +160,7 @@ class DataSekolah extends Component
             $this->dispatch('import-success', message: 'Data sekolah berhasil diperbarui.');
 
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal memperbarui data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal memperbarui data: '.$e->getMessage());
         }
     }
 
@@ -172,7 +176,7 @@ class DataSekolah extends Component
 
             $this->dispatch('import-success', message: 'Data sekolah berhasil dihapus.');
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal menghapus data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal menghapus data: '.$e->getMessage());
         }
     }
 
@@ -180,9 +184,9 @@ class DataSekolah extends Component
     {
         $existingUser = User::where('username', $this->form['npsn'])->first();
 
-        if (!$existingUser) {
+        if (! $existingUser) {
             User::create([
-                'name' => 'Operator ' . $this->form['npsn'],
+                'name' => 'Operator '.$this->form['npsn'],
                 'username' => $this->form['npsn'],
                 'password' => Hash::make($this->form['npsn']),
                 'role' => 'opsd',
@@ -190,7 +194,7 @@ class DataSekolah extends Component
                 'is_active' => true,
             ]);
         } else {
-            if (!$existingUser->sekolah_id) {
+            if (! $existingUser->sekolah_id) {
                 $existingUser->update(['sekolah_id' => $sekolah->sekolah_id]);
             }
         }
@@ -220,9 +224,9 @@ class DataSekolah extends Component
     {
         $sekolah = SekolahDasar::query()
             ->when($this->search, function ($query) {
-                $query->where('nama', 'like', '%' . $this->search . '%')
-                    ->orWhere('npsn', 'like', '%' . $this->search . '%')
-                    ->orWhere('desa_kelurahan', 'like', '%' . $this->search . '%');
+                $query->where('nama', 'like', '%'.$this->search.'%')
+                    ->orWhere('npsn', 'like', '%'.$this->search.'%')
+                    ->orWhere('desa_kelurahan', 'like', '%'.$this->search.'%');
             })
             ->orderBy('nama')
             ->paginate(15);

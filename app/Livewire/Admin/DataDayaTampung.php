@@ -15,8 +15,11 @@ class DataDayaTampung extends Component
     use WithPagination;
 
     public $search = '';
+
     public $filterStatus = '';
+
     public $showEditModal = false;
+
     public $editId = null;
 
     public $form = [
@@ -26,7 +29,9 @@ class DataDayaTampung extends Component
     ];
 
     public $sudahIsi = 0;
+
     public $belumIsi = 0;
+
     public $totalDayaTampung = 0;
 
     public function updatingSearch()
@@ -78,7 +83,7 @@ class DataDayaTampung extends Component
     {
         $sekolah = SekolahMenengahPertama::find($sekolahId);
         if ($sekolah) {
-            $sekolah->is_locked_daya_tampung = !$sekolah->is_locked_daya_tampung;
+            $sekolah->is_locked_daya_tampung = ! $sekolah->is_locked_daya_tampung;
             $sekolah->save();
 
             $status = $sekolah->is_locked_daya_tampung ? 'dikunci' : 'dibuka';
@@ -111,8 +116,8 @@ class DataDayaTampung extends Component
         $sekolahs = SekolahMenengahPertama::query()
             ->when($this->search, function ($q) {
                 $q->where(function ($sub) {
-                    $sub->where('nama', 'like', '%' . $this->search . '%')
-                        ->orWhere('npsn', 'like', '%' . $this->search . '%');
+                    $sub->where('nama', 'like', '%'.$this->search.'%')
+                        ->orWhere('npsn', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->filterStatus, function ($q) {
@@ -129,7 +134,7 @@ class DataDayaTampung extends Component
             ->paginate(15);
 
         return view('livewire.admin.data-daya-tampung', [
-            'sekolahs' => $sekolahs
+            'sekolahs' => $sekolahs,
         ]);
     }
 

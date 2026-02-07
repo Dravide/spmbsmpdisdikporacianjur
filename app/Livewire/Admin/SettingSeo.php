@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\Setting;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Cache;
 
 #[Layout('layouts.app')]
 #[Title('Pengaturan SEO')]
@@ -21,38 +21,59 @@ class SettingSeo extends Component
 
     // Favicon Settings
     public $favicon_16;
+
     public $favicon_32;
+
     public $favicon_180;
+
     public $favicon_192;
+
     public $favicon_512;
+
     public $existing_favicon_16;
+
     public $existing_favicon_32;
+
     public $existing_favicon_180;
+
     public $existing_favicon_192;
+
     public $existing_favicon_512;
 
     // OpenGraph Settings
     public $og_title;
+
     public $og_description;
+
     public $og_image;
+
     public $existing_og_image;
+
     public $og_type = 'website';
+
     public $og_locale = 'id_ID';
+
     public $twitter_card = 'summary_large_image';
+
     public $twitter_site;
 
     // SEO Meta Settings
     public $meta_description;
+
     public $meta_keywords;
+
     public $canonical_url;
 
     // Google Integration
     public $google_site_verification;
+
     public $google_analytics_id;
+
     public $google_tag_manager_id;
 
     // Advanced
     public $robots_txt;
+
     public $sitemap_enabled = true;
 
     public function mount()
@@ -90,7 +111,7 @@ class SettingSeo extends Component
 
     private function getDefaultRobotsTxt()
     {
-        return "User-agent: *\nAllow: /\n\nSitemap: " . config('app.url') . "/sitemap.xml";
+        return "User-agent: *\nAllow: /\n\nSitemap: ".config('app.url').'/sitemap.xml';
     }
 
     public function setTab($tab)
@@ -205,7 +226,7 @@ class SettingSeo extends Component
     private function saveImage($property, $key, $folder)
     {
         if ($this->$property) {
-            $existingKey = 'existing_' . $property;
+            $existingKey = 'existing_'.$property;
 
             // Delete old image if exists
             if ($this->$existingKey) {
@@ -214,7 +235,7 @@ class SettingSeo extends Component
 
             $path = $this->$property->store($folder, 'public');
             Setting::updateOrCreate(['key' => $key], ['value' => $path]);
-            Cache::forget('setting_' . $key);
+            Cache::forget('setting_'.$key);
             $this->$existingKey = $path;
             $this->$property = null;
         }
@@ -223,16 +244,16 @@ class SettingSeo extends Component
     private function saveSetting($key, $value)
     {
         Setting::updateOrCreate(['key' => $key], ['value' => $value]);
-        Cache::forget('setting_' . $key);
+        Cache::forget('setting_'.$key);
     }
 
     public function deleteFavicon($key)
     {
-        $existingKey = 'existing_' . $key;
+        $existingKey = 'existing_'.$key;
         if ($this->$existingKey) {
             Storage::disk('public')->delete($this->$existingKey);
             Setting::where('key', $key)->delete();
-            Cache::forget('setting_' . $key);
+            Cache::forget('setting_'.$key);
             $this->$existingKey = null;
             session()->flash('message', 'Favicon berhasil dihapus.');
         }

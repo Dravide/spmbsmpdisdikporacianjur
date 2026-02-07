@@ -27,7 +27,7 @@ class Announcement extends Component
         $scheduleOpen = \App\Models\Jadwal::isOpen('pengumuman');
         $scheduleStartDate = null;
 
-        if (!$scheduleOpen) {
+        if (! $scheduleOpen) {
             $jadwal = \App\Models\Jadwal::where('keyword', 'pengumuman')->first();
             if ($jadwal && $jadwal->aktif && now()->lessThan($jadwal->tanggal_mulai)) {
                 $scheduleStartDate = $jadwal->tanggal_mulai->toISOString();

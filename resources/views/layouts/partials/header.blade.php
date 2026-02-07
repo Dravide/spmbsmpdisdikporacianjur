@@ -27,6 +27,37 @@
                 </a>
             @endif
 
+            {{-- Ticket System Button --}}
+            @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isOpsmp()))
+                @php
+                    $isTicketActive = request()->routeIs('*.tickets');
+                    $user = auth()->user();
+                    $ticketRoute = $user->isAdmin() ? route('admin.tickets') : route('opsmp.tickets');
+                    $pendingCount = 0;
+                    $badgeClass = '';
+
+                    if ($user->isAdmin()) {
+                        $pendingCount = \App\Models\Ticket::where('status', 'pending')->count();
+                        $badgeClass = 'bg-danger';
+                    } else {
+                        $pendingCount = \App\Models\Ticket::where('user_id', $user->id)->where('status', 'pending')->count();
+                        $badgeClass = 'bg-warning text-dark';
+                    }
+                @endphp
+                <a href="{{ $ticketRoute }}"
+                    class="btn btn-icon {{ $isTicketActive ? 'btn-primary text-white' : 'btn-action-gray' }} rounded-circle waves-effect waves-light me-2 position-relative"
+                    data-bs-toggle="tooltip" data-bs-placement="bottom" title="Tiket Bantuan">
+                    <i class="fi fi-rr-ticket scale-1x"></i>
+                    @if($pendingCount > 0)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill {{ $badgeClass }}"
+                            style="font-size: 0.6rem;">
+                            {{ $pendingCount }}
+                            <span class="visually-hidden">pending tickets</span>
+                        </span>
+                    @endif
+                </a>
+            @endif
+
             {{-- Notification Bell for Siswa --}}
             @if(auth('siswa')->check())
                 <div class="me-2">

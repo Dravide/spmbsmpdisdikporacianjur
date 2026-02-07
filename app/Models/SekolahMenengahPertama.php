@@ -11,8 +11,11 @@ class SekolahMenengahPertama extends Model
     use HasFactory;
 
     protected $table = 'sekolah_menengah_pertamas';
+
     protected $primaryKey = 'sekolah_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -94,10 +97,13 @@ class SekolahMenengahPertama extends Model
     public function getBentukPendidikanDisplayAttribute()
     {
         $val = $this->bentuk_pendidikan_id;
-        if ($val == 5)
+        if ($val == 5) {
             return 'SWASTA';
-        if ($val == 6)
+        }
+        if ($val == 6) {
             return 'NEGERI';
+        }
+
         return $val;
     }
 }

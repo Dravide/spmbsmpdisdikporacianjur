@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, \App\Traits\TwoFactorAuthenticatable;
+    use \App\Traits\TwoFactorAuthenticatable, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -92,6 +92,7 @@ class User extends Authenticatable
         } elseif ($this->role === 'opsmp') {
             return $this->sekolahMenengahPertama;
         }
+
         return null;
     }
 
@@ -127,8 +128,6 @@ class User extends Authenticatable
         return $this->role === 'opsmp';
     }
 
-
-
     /**
      * Get role label.
      */
@@ -159,7 +158,7 @@ class User extends Authenticatable
     {
         $roleSetting = $this->roleSetting();
 
-        if (!$roleSetting) {
+        if (! $roleSetting) {
             return true;
         }
 

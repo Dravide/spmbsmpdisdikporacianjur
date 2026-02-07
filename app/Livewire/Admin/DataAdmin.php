@@ -27,7 +27,9 @@ class DataAdmin extends Component
     ];
 
     public $showCreateModal = false;
+
     public $isEditMode = false;
+
     public $editId = null;
 
     public function updatingSearch()
@@ -93,7 +95,7 @@ class DataAdmin extends Component
             $this->dispatch('import-success', message: 'Administrator berhasil ditambahkan.');
 
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal menyimpan data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal menyimpan data: '.$e->getMessage());
         }
     }
 
@@ -101,8 +103,8 @@ class DataAdmin extends Component
     {
         $this->validate([
             'form.name' => 'required|string|max:255',
-            'form.username' => 'required|string|max:255|unique:users,username,' . $this->editId,
-            'form.email' => 'nullable|email|max:255|unique:users,email,' . $this->editId,
+            'form.username' => 'required|string|max:255|unique:users,username,'.$this->editId,
+            'form.email' => 'nullable|email|max:255|unique:users,email,'.$this->editId,
             'form.password' => 'nullable|string|min:6', // Optional on update
         ], [
             'form.username.unique' => 'Username sudah digunakan.',
@@ -118,7 +120,7 @@ class DataAdmin extends Component
                 'email' => $this->form['email'] ?: null,
             ];
 
-            if (!empty($this->form['password'])) {
+            if (! empty($this->form['password'])) {
                 $data['password'] = Hash::make($this->form['password']);
             }
 
@@ -129,7 +131,7 @@ class DataAdmin extends Component
             $this->dispatch('import-success', message: 'Administrator berhasil diperbarui.');
 
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal memperbarui data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal memperbarui data: '.$e->getMessage());
         }
     }
 
@@ -145,7 +147,7 @@ class DataAdmin extends Component
 
             $this->dispatch('import-success', message: '2FA berhasil direset untuk pengguna ini.');
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal mereset 2FA: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal mereset 2FA: '.$e->getMessage());
         }
     }
 
@@ -153,6 +155,7 @@ class DataAdmin extends Component
     {
         if ($id == Auth::id()) {
             $this->dispatch('import-error', message: 'Anda tidak dapat menghapus akun sendiri.');
+
             return;
         }
 
@@ -162,7 +165,7 @@ class DataAdmin extends Component
 
             $this->dispatch('import-success', message: 'Administrator berhasil dihapus.');
         } catch (\Exception $e) {
-            $this->dispatch('import-error', message: 'Gagal menghapus data: ' . $e->getMessage());
+            $this->dispatch('import-error', message: 'Gagal menghapus data: '.$e->getMessage());
         }
     }
 
@@ -171,9 +174,9 @@ class DataAdmin extends Component
         $users = User::where('role', 'admin')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('username', 'like', '%' . $this->search . '%')
-                        ->orWhere('email', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('username', 'like', '%'.$this->search.'%')
+                        ->orWhere('email', 'like', '%'.$this->search.'%');
                 });
             })
             ->orderBy('name')

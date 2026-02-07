@@ -16,18 +16,21 @@ class ListPengumuman extends Component
     use WithPagination;
 
     public $search = '';
+
     public $filterJalur = '';
+
     public $filterStatus = '';
+
     public $dateStart = '';
+
     public $dateEnd = '';
-
-
 
     public function getStatisticsProperty()
     {
         $user = Auth::user();
-        if (!$user)
+        if (! $user) {
             return [];
+        }
 
         $baseQuery = Pengumuman::where('sekolah_menengah_pertama_id', $user->sekolah_id);
 
@@ -46,8 +49,9 @@ class ListPengumuman extends Component
     public function resetData()
     {
         $user = Auth::user();
-        if (!$user)
+        if (! $user) {
             return;
+        }
 
         Pengumuman::where('sekolah_menengah_pertama_id', $user->sekolah_id)->delete();
 
@@ -63,13 +67,13 @@ class ListPengumuman extends Component
         $user = Auth::user();
         $sekolahId = $user->sekolah_id;
 
-        $query = Pengumuman::with(['pesertaDidik', 'jalur', 'pendaftaran'])
+        $query = Pengumuman::with(['pesertaDidik.sekolah', 'jalur', 'pendaftaran'])
             ->where('sekolah_menengah_pertama_id', $sekolahId);
 
         if ($this->search) {
             $query->whereHas('pesertaDidik', function ($q) {
-                $q->where('nama', 'like', '%' . $this->search . '%')
-                    ->orWhere('nisn', 'like', '%' . $this->search . '%');
+                $q->where('nama', 'like', '%'.$this->search.'%')
+                    ->orWhere('nisn', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -96,7 +100,7 @@ class ListPengumuman extends Component
         return view('livewire.opsmp.list-pengumuman', [
             'pengumumans' => $pengumumans,
             'jalurList' => $jalurList,
-            'statistics' => $this->statistics
+            'statistics' => $this->statistics,
         ]);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Opsmp;
 
-use App\Models\Pendaftaran;
 use App\Models\PendaftaranBerkas;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -17,12 +16,16 @@ class VervalBerkas extends Component
     use WithPagination;
 
     public $search = '';
+
     public $filterStatus = '';
 
     // Modal
     public $showModal = false;
+
     public $selectedBerkas = null;
+
     public $newStatus = '';
+
     public $catatan = '';
 
     protected $queryString = ['search', 'filterStatus'];
@@ -74,7 +77,7 @@ class VervalBerkas extends Component
 
     public function quickApprove($id)
     {
-        $berkas = PendaftaranBerkas::find($id);
+        $berkas = PendaftaranBerkas::with(['pendaftaran.pesertaDidik'])->find($id);
         if ($berkas) {
             $berkas->status_berkas = 'approved';
             $berkas->save();
@@ -96,8 +99,8 @@ class VervalBerkas extends Component
             })
             ->when($this->search, function ($query) {
                 $query->whereHas('pendaftaran.pesertaDidik', function ($q) {
-                    $q->where('nama', 'like', '%' . $this->search . '%')
-                        ->orWhere('nisn', 'like', '%' . $this->search . '%');
+                    $q->where('nama', 'like', '%'.$this->search.'%')
+                        ->orWhere('nisn', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->filterStatus, function ($query) {

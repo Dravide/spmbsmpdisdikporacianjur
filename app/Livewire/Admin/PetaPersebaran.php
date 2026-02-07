@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\JalurPendaftaran;
 use App\Models\Pendaftaran;
 use App\Models\SekolahMenengahPertama;
-use App\Models\JalurPendaftaran;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -14,9 +14,13 @@ use Livewire\Component;
 class PetaPersebaran extends Component
 {
     public $filterSekolah = '';
+
     public $filterJalur = '';
+
     public $filterStatus = '';
+
     public $filterKecamatan = '';
+
     public $mapMode = 'markers'; // markers or heatmap
 
     public function updated($property)
@@ -46,7 +50,7 @@ class PetaPersebaran extends Component
         }
         if ($this->filterKecamatan) {
             $query->whereHas('pesertaDidik', function ($q) {
-                $q->where('kecamatan', 'like', '%' . $this->filterKecamatan . '%');
+                $q->where('kecamatan', 'like', '%'.$this->filterKecamatan.'%');
             });
         }
 

@@ -7,7 +7,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Http;
 
 #[Layout('layouts.app')]
 #[Title('Data Siswa')]
@@ -38,10 +37,10 @@ class DataSiswa extends Component
     public function generatePassword(PesertaDidik $siswa)
     {
         // Generate password from birthdate YYYYMMDD if not present
-        if (!$siswa->password) {
+        if (! $siswa->password) {
             $dob = $siswa->tanggal_lahir ? $siswa->tanggal_lahir->format('Ymd') : '12345678';
             $siswa->update([
-                'password' => \Illuminate\Support\Facades\Hash::make($dob)
+                'password' => \Illuminate\Support\Facades\Hash::make($dob),
             ]);
         }
     }
@@ -51,7 +50,7 @@ class DataSiswa extends Component
         $siswa = PesertaDidik::findOrFail($id);
 
         // Ensure password exists
-        if (!$siswa->password) {
+        if (! $siswa->password) {
             $this->generatePassword($siswa);
         }
 
@@ -59,6 +58,7 @@ class DataSiswa extends Component
     }
 
     public array $selected = [];
+
     public bool $selectAll = false;
 
     // Reset selection when search/page changes
@@ -72,7 +72,7 @@ class DataSiswa extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selected = $this->getFilteredQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
+            $this->selected = $this->getFilteredQuery()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
         } else {
             $this->selected = [];
         }
@@ -82,8 +82,9 @@ class DataSiswa extends Component
     protected function getFilteredQuery()
     {
         $user = auth()->user();
-        if (!$user->sekolah_id)
-            return PesertaDidik::where('id', 0); // No results
+        if (! $user->sekolah_id) {
+            return PesertaDidik::where('id', 0);
+        } // No results
 
         return PesertaDidik::with(['sekolah', 'pendaftaran'])->where('sekolah_id', $user->sekolah_id)
             ->when($this->search, function ($q) {
@@ -99,6 +100,7 @@ class DataSiswa extends Component
     {
         if (empty($this->selected)) {
             $this->dispatch('alert', ['type' => 'warning', 'message' => 'Pilih setidaknya satu siswa untuk dicetak.']);
+
             return;
         }
 
@@ -118,10 +120,10 @@ class DataSiswa extends Component
         $user = auth()->user();
 
         // Ensure user has a linked school
-        if (!$user->sekolah_id) {
+        if (! $user->sekolah_id) {
             return view('livewire.opsd.data-siswa', [
                 'pesertaDidikList' => null,
-                'hasSchool' => false
+                'hasSchool' => false,
             ]);
         }
 
@@ -130,7 +132,7 @@ class DataSiswa extends Component
         return view('livewire.opsd.data-siswa', [
             'pesertaDidikList' => $data,
             'hasSchool' => true,
-            'debugUserSekolahId' => $user->sekolah_id
+            'debugUserSekolahId' => $user->sekolah_id,
         ]);
     }
 

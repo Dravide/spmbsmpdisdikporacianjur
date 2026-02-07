@@ -39,7 +39,7 @@ class NotificationList extends Component
         $notifications = $user ? $user->notifications()->paginate(10) : collect();
 
         return view('livewire.student.notification-list', [
-            'notifications' => $notifications
+            'notifications' => $notifications,
         ]);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Livewire\Dashboard\OpsmpDashboard;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', OpsmpDashboard::class)->name('opsmp.dashboard');
 
@@ -13,3 +13,5 @@ Route::get('/pemetaan-domisili', \App\Livewire\Opsmp\PemetaanDomisili::class)->n
 Route::get('/daya-tampung', \App\Livewire\Opsmp\DayaTampung::class)->name('opsmp.daya-tampung');
 Route::get('/pengumuman', \App\Livewire\Opsmp\ListPengumuman::class)->name('opsmp.pengumuman');
 Route::get('/daftar-ulang', \App\Livewire\Opsmp\DaftarUlang::class)->name('opsmp.daftar-ulang');
+Route::get('/tickets', \App\Livewire\Opsmp\TicketManager::class)->name('opsmp.tickets');
+Route::get('/cetak-daftar-hadir', [\App\Http\Controllers\PrintController::class, 'cetakDaftarHadir'])->name('opsmp.cetak-daftar-hadir');
