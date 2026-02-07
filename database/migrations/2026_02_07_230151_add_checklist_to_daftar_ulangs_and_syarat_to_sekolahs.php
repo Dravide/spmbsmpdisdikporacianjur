@@ -11,11 +11,15 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('daftar_ulangs', function (Blueprint $table) {
-            $table->json('checklist_dokumen')->nullable()->after('status');
+            if (!Schema::hasColumn('daftar_ulangs', 'checklist_dokumen')) {
+                $table->json('checklist_dokumen')->nullable()->after('status');
+            }
         });
 
         Schema::table('sekolah_menengah_pertamas', function (Blueprint $table) {
-            $table->text('syarat_daftar_ulang')->nullable()->after('nama');
+            if (!Schema::hasColumn('sekolah_menengah_pertamas', 'syarat_daftar_ulang')) {
+                $table->text('syarat_daftar_ulang')->nullable()->after('nama');
+            }
         });
     }
 
@@ -25,11 +29,15 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('daftar_ulangs', function (Blueprint $table) {
-            $table->dropColumn('checklist_dokumen');
+            if (Schema::hasColumn('daftar_ulangs', 'checklist_dokumen')) {
+                $table->dropColumn('checklist_dokumen');
+            }
         });
 
         Schema::table('sekolah_menengah_pertamas', function (Blueprint $table) {
-            $table->dropColumn('syarat_daftar_ulang');
+            if (Schema::hasColumn('sekolah_menengah_pertamas', 'syarat_daftar_ulang')) {
+                $table->dropColumn('syarat_daftar_ulang');
+            }
         });
     }
 };
