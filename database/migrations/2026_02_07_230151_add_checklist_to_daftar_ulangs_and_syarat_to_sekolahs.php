@@ -15,7 +15,7 @@ return new class extends Migration {
         });
 
         Schema::table('sekolah_menengah_pertamas', function (Blueprint $table) {
-            $table->text('syarat_daftar_ulang')->nullable()->after('email');
+            $table->text('syarat_daftar_ulang')->nullable()->after('nama');
         });
     }
 
